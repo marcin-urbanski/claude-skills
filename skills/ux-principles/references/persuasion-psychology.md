@@ -2,6 +2,8 @@
 
 Seven principles for moving users through forms, onboarding, signup and upgrade moments. Each has a rule, how to apply it, where the line is, and an example. The Guardrails in SKILL.md apply to all of them.
 
+Source video: [The UX Psychology Behind Apps People Can't Stop Using](https://www.youtube.com/watch?v=2TlIg3VokY8) by uxpeak.
+
 ## Contents
 1. Smart defaults - forms and settings
 2. Goal gradient - onboarding and progress
