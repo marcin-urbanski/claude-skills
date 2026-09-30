@@ -30,6 +30,8 @@ Rules for how people reach content and act on it: how many steps stand between t
 
 **Rule:** Primary actions and frequent navigation sit where a thumb reaches easily: the lower half and centre of the screen.
 
+This section is for phones. On iPad and Mac, navigation and actions move to the top (tab bar or sidebar, window toolbar), and Mac windows keep controls away from the bottom edge; see `apple-platforms.md` sections 7-9.
+
 **Apply:**
 - Primary CTA in a bottom bar or near the bottom of the content, full width or right-aligned, not in the top corner.
 - Bottom tab bar for 3-5 main destinations in app-like interfaces. Content sites can keep a top header, but keep the main action reachable at the bottom.
@@ -92,6 +94,8 @@ Illustrations are optional. Use them in consumer products; in admin panels and i
 ## 6. Navigation menus
 
 **Rule:** Menus with more than a handful of items are grouped, labelled and scannable; small menus stay simple.
+
+This section covers website navigation. Menus inside an app (action menus, context menus, a native menu bar) follow `app-patterns.md` section 3.
 
 **Apply:**
 - Up to about six items: a plain dropdown or no dropdown at all. Mega menus are for genuinely large sections.
