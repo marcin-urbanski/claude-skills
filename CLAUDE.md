@@ -21,9 +21,10 @@ Commit, push and open the PR from the worktree. After I merge the PR:
 ```bash
 git -C ~/Developer/claude-skills pull
 git -C ~/Developer/claude-skills worktree remove ../claude-skills-<name>
+git -C ~/Developer/claude-skills branch -d feature/<name>
 ```
 
-The change reaches sessions only after that `pull`, because the symlinks point at `~/Developer/claude-skills`.
+The change reaches sessions only after that `pull`, because the symlinks point at `~/Developer/claude-skills`. GitHub deletes the remote branch on merge. `branch -d` refuses to delete a branch that is not merged, so if it fails, stop and tell me instead of forcing it with `-D`.
 
 ## After changing `handoff` or `ux-principles`
 
