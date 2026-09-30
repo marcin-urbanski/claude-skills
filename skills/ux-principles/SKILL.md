@@ -89,3 +89,7 @@ If a request asks for something that breaks a guardrail, build the honest versio
 Rules specific to how I like interfaces to look and behave go here as short bullets, added over time.
 
 - (none yet)
+
+## Sources
+
+Much of `interaction-patterns.md`, `visual-craft.md` and principle 7 of `persuasion-psychology.md` builds on uxpeak's [UI/UX Playbook](https://www.uxpeak.com) (free preview); principles 1 to 6 on their video [The UX Psychology Behind Apps People Can't Stop Using](https://www.youtube.com/watch?v=2TlIg3VokY8). The rules here are rewritten and extended, not copied.
