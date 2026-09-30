@@ -53,6 +53,8 @@ For claude.ai, zip a skill folder (for example `handoff/` with its `SKILL.md`) a
 
 `tdd`, `systematic-debugging` and `verification-before-completion` are adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
+`ux-principles` builds on uxpeak's [UI/UX Playbook](https://www.uxpeak.com) (free preview) and their video [The UX Psychology Behind Apps People Can't Stop Using](https://www.youtube.com/watch?v=2TlIg3VokY8), rewritten and extended in my own words.
+
 For animation and motion work I also use [emilkowalski/skills](https://github.com/emilkowalski/skills).
 
 ## Licence
