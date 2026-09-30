@@ -11,7 +11,7 @@ The skills and hooks I use every day with [Claude Code](https://code.claude.com)
 | [tdd](skills/tdd/SKILL.md) | Red, green, refactor for every change to production code. |
 | [systematic-debugging](skills/systematic-debugging/SKILL.md) | Find the root cause before fixing anything. |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md) | Run the tests, linters and build before saying something works. |
-| [ux-principles](skills/ux-principles/SKILL.md) | My UI/UX rulebook: avoiding generic AI-looking design, conversion psychology within honest limits, visual craft, interaction patterns and e-commerce product pages. |
+| [ux-principles](skills/ux-principles/SKILL.md) | My UI/UX rulebook: avoiding generic AI-looking design, conversion psychology within honest limits, visual craft, interaction and app patterns, e-commerce product pages, and native iPhone, iPad and Mac apps. |
 
 ## Hooks
 
@@ -53,7 +53,7 @@ For claude.ai, zip a skill folder (for example `handoff/` with its `SKILL.md`) a
 
 `tdd`, `systematic-debugging` and `verification-before-completion` are adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-`ux-principles` builds on uxpeak's [UI/UX Playbook](https://www.uxpeak.com) (free preview) and their video [The UX Psychology Behind Apps People Can't Stop Using](https://www.youtube.com/watch?v=2TlIg3VokY8), rewritten and extended in my own words.
+`ux-principles` builds on uxpeak's [UI/UX Playbook](https://www.uxpeak.com) (free preview) and their video [The UX Psychology Behind Apps People Can't Stop Using](https://www.youtube.com/watch?v=2TlIg3VokY8), rewritten and extended in my own words. Its app-pattern and Apple-platform references are based on Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/), paraphrased as rules.
 
 For animation and motion work I also use [emilkowalski/skills](https://github.com/emilkowalski/skills).
 

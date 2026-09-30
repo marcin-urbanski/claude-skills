@@ -95,8 +95,8 @@ If the user names a mode, use it. Otherwise pick from the signals below and stat
 - **Motion:** fast and functional only (150-200ms): state changes, panels, feedback. Nothing decorative.
 - **Content and imagery:** data and real content; icons and avatars for scanning; illustrations only in empty states of consumer products.
 - **Conversion:** only at upgrade, onboarding and retention moments (`persuasion-psychology.md`), never interrupting the work.
-- **Load:** `visual-craft.md`, `interaction-patterns.md`, `persuasion-psychology.md`.
-- **Typical failure:** cards everywhere, hero-sized headings in a tool, happy-path-only states.
+- **Load:** `visual-craft.md`, `interaction-patterns.md`, `app-patterns.md`, `persuasion-psychology.md`. Native iPhone, iPad and Mac apps also load `apple-platforms.md` and `apple-patterns.md`, and follow the platform's components, sizes and navigation structure.
+- **Typical failure:** cards everywhere, hero-sized headings in a tool, happy-path-only states; in native apps, web patterns and custom chrome where the platform already has a convention.
 
 ---
 

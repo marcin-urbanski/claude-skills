@@ -157,6 +157,6 @@ Before handing over any new screen or page:
 1. Go through the clusters in section 2 and the five tests at the top. Remove each match or state why it stays.
 2. **Skeleton check:** write the page as a list of section layouts (e.g. split hero with card, three-up cards, numbered steps, image/text split, CTA band). If it matches the standard skeleton, restructure at least two sections so their layout comes from their content, and make sure at least one moment breaks the grid or the expected rhythm.
 3. Could this layout go on a competitor's site with only the logo changed? If yes, go back to the visual thesis and the content.
-4. Where a browser is available (Claude Code with Playwright, Claude in Chrome), render at 390px and 1440px and review the screenshots, not just the code. Check that text doesn't clip, overlap or overflow; controls are labelled, reachable and focusable; nothing stays invisible if scripts fail; every decorative layer has a job.
+4. For native apps, use the device and size checks in `apple-platforms.md` section 1 instead. Where a browser is available (Claude Code with Playwright, Claude in Chrome), render at 390px and 1440px and review the screenshots, not just the code. Check that text doesn't clip, overlap or overflow; controls are labelled, reachable and focusable; nothing stays invisible if scripts fail; every decorative layer has a job.
 5. Confirm the result is more specific to this product, not merely more fashionable.
 6. When reporting, list the material removals or corrections and why each helped.

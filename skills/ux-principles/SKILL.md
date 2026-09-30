@@ -1,6 +1,6 @@
 ---
 name: "ux-principles"
-description: Marcin's personal UI/UX rulebook. Use this skill whenever the task involves designing, building, reviewing or writing copy for any user-facing interface - screens, forms, onboarding, signup or checkout flows, product pages, catalogue grids, subscription and bundle options, option selectors, trust badges, social proof, pricing pages, paywalls, upgrade prompts, landing pages, dashboards, admin panels, lists and inboxes, mobile layouts, navigation and mega menus, forms and input fields, empty states, modals, cards, shadows, button labels or microcopy - even if the user doesn't say "UX". Covers avoiding generic AI-looking design, conversion psychology, visual craft (hierarchy, spacing, typography, colour, icons, shadows), interaction patterns (thumb zone, empty states, interaction cost) and e-commerce product page layout. Also use it when generating frontend code (React, Blade, Livewire, WordPress/WooCommerce templates) that renders a UI, and when asked to critique a screenshot, mockup or Figma frame.
+description: Marcin's personal UI/UX rulebook. Use it whenever the task involves designing, building, reviewing or writing copy for any user-facing interface - websites, landing, pricing and product pages, checkout, forms, onboarding, paywalls, dashboards, admin panels, lists, navigation, modals, empty states, button labels or microcopy, and native iPhone, iPad and Mac apps - even if the user doesn't say "UX". Covers avoiding generic AI-looking design, honest conversion psychology (defaults, social proof, trust badges, option selectors, pricing), visual craft (hierarchy, spacing, typography, colour, icons, shadows, motion), interaction patterns (thumb zone, touch targets, menus), app patterns (undo vs confirmation, alerts, controls, search, loading, keyboard, notifications) and Apple's Human Interface Guidelines (Dynamic Type, Liquid Glass, SF Symbols, Mac menu bar, App Review). Also use it when generating UI code (React, Blade, Livewire, WordPress/WooCommerce, SwiftUI) and to critique a screenshot, mockup or Figma frame.
 ---
 
 # UX Principles
@@ -21,7 +21,7 @@ Design leads; the build follows. Nothing in this skill caps how ambitious, immer
 
 1. **Choose the design mode** (`design-modes.md`): Creative, Corporate, Landing page, E-commerce, or App and dashboard. Use the mode the user names; otherwise pick from the signals and state it in one line. The mode sets how much layout freedom and motion the design has, the content-to-imagery balance, CTA placement, and which references to load. Then identify the surface within it (form, pricing, product page, onboarding, etc.).
 2. **Read only the references that apply.** Don't load everything for a single button label.
-3. **Set the direction** for any new site or page (`anti-slop.md` section 1): three genuinely different directions first, then one chosen. Skip only when the client's own design system decides it. For a narrow edit, don't widen the task: fix what was asked without adding new slop.
+3. **Set the direction** for any new site or page (`anti-slop.md` section 1): three genuinely different directions first, then one chosen. Skip only when the client's own design system decides it; in a native Apple app the platform's conventions decide the chrome, so set a direction only for the parts that carry identity (`apple-platforms.md` section 1). For a narrow edit, don't widen the task: fix what was asked without adding new slop.
 4. **Rank the information.** Before any layout, list what's on the screen and rank it by importance to the user's goal (`visual-craft.md` section 1). Everything else follows from that ranking.
 5. **Build or review against the rules.**
    - When *building*: apply the rules silently in the output. Don't narrate psychology theory unless asked.
@@ -39,9 +39,12 @@ Design leads; the build follows. Nothing in this skill caps how ambitious, immer
 | `references/visual-craft.md` | Any screen being built or visually reviewed: hierarchy, spacing, alignment, colour, typography, labels/badges, icons, dividers, UI over imagery, shadows, motion |
 | `references/interaction-patterns.md` | Any screen with content to reach or act on: interaction cost, banners that hide content, mobile thumb zone and touch targets, empty states, scanning cues, forms (labels, spacing, field widths), navigation and mega menus |
 | `references/marketing-pages.md` | Landing pages and pricing pages: message match, objection-led structure, proof placement, plan cards, pricing transparency, noindex and FAQ SEO |
+| `references/app-patterns.md` | Any app, web or native: confirmations vs undo, alerts, modals and popovers, app menus and context menus, choosing a control, tables, search, loading and progress, keyboard and focus, notifications, accounts and permissions, AI features, interface copy |
+| `references/apple-platforms.md` | Native iPhone, iPad or Mac apps: platform conventions, sizes in pt, text styles and Dynamic Type, semantic colours and Dark Mode, Liquid Glass, navigation structure, toolbars, windows, the Mac menu bar, shortcuts, SF Symbols, app icon, accessibility |
+| `references/apple-patterns.md` | Native Apple app components and flows: alerts and action sheets, sheets, lists and controls, text input, launch and onboarding, permissions, settings, accounts, paywalls and In-App Purchase, ratings, notifications, widgets and Live Activities, documents |
 | `references/product-pages.md` | E-commerce product pages and catalogue grids: imagery, status badges, social proof, variant selectors, subscription/bundle cards, add to basket, trust badges, sticky mobile bars, quantity presets |
 
-Building a full screen usually needs `anti-slop.md`, `visual-craft.md` and `interaction-patterns.md`; a product page adds `product-pages.md` and `persuasion-psychology.md`; a landing or pricing page adds `marketing-pages.md` and `persuasion-psychology.md`.
+Building a full screen usually needs `anti-slop.md`, `visual-craft.md` and `interaction-patterns.md`; a product page adds `product-pages.md` and `persuasion-psychology.md`; a landing or pricing page adds `marketing-pages.md` and `persuasion-psychology.md`; an app screen with dialogs, menus or long-running tasks adds `app-patterns.md`. A native Apple app loads `apple-platforms.md`, `apple-patterns.md` and `app-patterns.md` (plus `persuasion-psychology.md` for onboarding and paywalls), and those take precedence over web sizing rules in the other files.
 
 New principle sets are added as new files here. If a reference file conflicts with this SKILL.md, this file wins.
 
@@ -80,7 +83,7 @@ These are the only hard limits in this skill. They override any persuasion rule 
 - **Social proof and claims must be real.** Exact review counts, sales figures from actual orders, badges and certifications the client can evidence. Fake reviews are banned outright under the DMCC Act. Never present statutory rights (e.g. 14-day online returns) as a special feature.
 - **Defaults must serve the user.** Pre-select the most common *genuine* choice. Never pre-tick marketing consent, paid add-ons, subscriptions or auto-renewal upsells - under UK GDPR, pre-ticked consent is not valid consent anyway.
 - **Cancellation is as easy as signup.** Retention flows can remind users what they'll lose, once, then let them leave.
-- **Accessibility is not traded for aesthetics.** Text 4.5:1 contrast (large text 3:1), icons and controls 3:1, touch targets 48x48px by default and never below 44x44px. "Softer" and "calmer" stay above these lines.
+- **Accessibility is not traded for aesthetics.** Text 4.5:1 contrast (large text 3:1), icons and controls 3:1, touch targets 48x48px by default and never below 44x44px on the web. Native Apple apps follow the platform sizes in `apple-platforms.md` section 3 (iOS 44x44pt, macOS 28x28pt by default). "Softer" and "calmer" stay above these lines.
 
 If a request asks for something that breaks a guardrail, build the honest version and say in one line why.
 
@@ -93,3 +96,5 @@ Rules specific to how I like interfaces to look and behave go here as short bull
 ## Sources
 
 Much of `interaction-patterns.md`, `visual-craft.md` and principle 7 of `persuasion-psychology.md` builds on uxpeak's [UI/UX Playbook](https://www.uxpeak.com) (free preview); principles 1 to 6 on their video [The UX Psychology Behind Apps People Can't Stop Using](https://www.youtube.com/watch?v=2TlIg3VokY8). The rules here are rewritten and extended, not copied.
+
+`app-patterns.md`, `apple-platforms.md` and `apple-patterns.md` are based on Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/) (read September 2026), paraphrased as rules and combined with my own judgement; they don't reproduce Apple's text.

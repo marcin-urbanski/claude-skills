@@ -110,7 +110,7 @@ Principles 1 to 6 are based on the video [The UX Psychology Behind Apps People C
 
 **Apply:**
 - Put add-on prices next to the main purchase they relate to.
-- Offer relative framing where it's true and helpful: percentage of total, per-month equivalent of an annual price, cost per use.
+- Offer relative framing where it's true and helpful: percentage of total, per-month equivalent of an annual price, cost per use. The amount actually billed stays the most prominent price; the per-month equivalent is secondary text beside it, never in its place (App Store subscriptions require this).
 - On plan tables, the order and the plan shown first set the anchor; lead with the plan most users should pick, or place it centrally and mark it.
 - When reviewing, flag every price that appears without context.
 
@@ -127,7 +127,7 @@ Principles 1 to 6 are based on the video [The UX Psychology Behind Apps People C
 **Rule:** Show the few choices that matter up front; reveal the rest when the user's action makes them relevant.
 
 **Apply:**
-- Up to about 6-8 options: inline chips, segmented control, swatches or selection cards. Longer lists (countries, dates, many sizes): dropdown or combobox with search is still the right tool.
+- Up to about 6-8 options: inline chips, swatches or selection cards; a segmented control holds at most about 5 on a phone. Longer lists (countries, dates, many sizes): dropdown or combobox with search is still the right tool.
 - Selection cards (label, icon, one-line description) suit 2-5 options that differ in kind, such as plans or modes. Don't card-ify everything: for many items, or items users compare on the same attributes, a list or table scans faster. Walls of identical cards are a common tell of generated UI.
 - Chips and cards are a radio group underneath (`role="radiogroup"` or native radio inputs styled), so keyboard and screen-reader users get the same control.
 - Put the explanation next to the choice it explains, as a short line that updates on selection. Don't rely on hover tooltips; they don't exist on touch screens.

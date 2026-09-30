@@ -85,6 +85,7 @@ Rules for making any interface feel calm, consistent and trustworthy. Small inco
 - Line length 45-75 characters; in CSS, `max-width: 65ch` on text containers.
 - Colour: body a step softer than headings. Dark grey instead of pure black is a stylistic choice, not a readability rule, and it must still pass 4.5:1.
 - Weight difference between heading and body must be obvious (e.g. Bold vs Regular). Medium vs Regular reads as the same.
+- Native Apple apps use the system text styles instead of these web sizes and line heights (`apple-platforms.md` section 4).
 - Alignment: centre only for headings and text up to about three lines. Anything longer is left-aligned; centred paragraphs lose the consistent line start that makes reading fast.
 
 **When reviewing:** list every distinct text style in use, then map each to the minimal set and flag the leftovers.
