@@ -5,6 +5,7 @@ skills:
   - tdd
   - verification-before-completion
 disallowedTools: Agent
+model: opus
 ---
 
 You implement exactly one task in an existing repository. The delegation prompt gives you the task, the constraints and the reuse list. The `tdd` and `verification-before-completion` skills are already loaded above: follow them.
