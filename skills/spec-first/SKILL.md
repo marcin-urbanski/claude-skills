@@ -59,10 +59,10 @@ Create the branch first (per global git rules). Then, per task:
 
 **Default (fix, feature):** do the task in this session with `tdd`, then a self-review against `reviewer-checklist.md` in this folder: reuse, security, best practices, spec compliance. Fix what you find. Commit with a conventional message. Next task.
 
-**Epic:** for each task, dispatch one implementer subagent and then one fresh reviewer subagent:
+**Epic:** for each task, dispatch one `implementer` subagent and then one fresh `reviewer` subagent. Both are defined in this repo's `agents/` folder: the implementer starts with `tdd` and `verification-before-completion` loaded and cannot spawn subagents, the reviewer is read-only.
 
-- Implementer prompt: the task text from the plan, global constraints, the reuse list, "follow TDD, show RED and GREEN output, commit when green, report files changed and anything unclear". It must not spawn subagents.
-- Reviewer prompt: `reviewer-prompt.md` in this folder, filled in with the task, constraints and the commit range. The reviewer is read-only.
+- Implementer prompt: the task text from the plan, global constraints and the reuse list. The agent's own instructions cover TDD, verification, the commit and the report.
+- Reviewer prompt: `reviewer-prompt.md` in this folder, filled in with the task, constraints and the commit range.
 - Critical or Important findings go back to the implementer; re-review only the fix. Minor findings are listed for the user.
 - Do not trust any report: check `git diff` and the test output yourself before moving on.
 
@@ -71,6 +71,6 @@ Use `handoff` between sessions on epics.
 ## 6. Finish (every size)
 
 1. `verification-before-completion`: full test suite, linters/static analysis the project uses, build if there is one. Read the output.
-2. Independent review of the whole branch: dispatch one reviewer subagent with `reviewer-prompt.md` against `main...HEAD`. For a one-line fix, the self-review checklist is enough.
+2. Independent review of the whole branch: dispatch one `reviewer` subagent with `reviewer-prompt.md` against `main...HEAD`. For a one-line fix, the self-review checklist is enough.
 3. Walk through the acceptance criteria one by one and say how each is met (test name or manual check).
 4. Push and open the PR with `gh pr create`: summary, acceptance criteria with status, reuse decisions, security notes, anything the reviewer flagged that you did not fix. Do not merge.
