@@ -7,6 +7,7 @@ Usage:
     scripts/skill-usage.py TimeTracker --since 2026-09-30
 """
 import argparse
+import collections
 import datetime
 import glob
 import json
@@ -50,7 +51,16 @@ def scan_session(main_file):
     """Count skills, code edits, commits and subagents in a session, subagents included."""
     session_dir = main_file[: -len(".jsonl")]
     files = [main_file] + glob.glob(os.path.join(session_dir, "subagents", "*.jsonl"))
-    s = {"main_skills": set(), "sub_skills": set(), "code_edits": 0, "commits": 0, "subagents": len(files) - 1}
+    s = {"main_skills": set(), "sub_skills": set(), "code_edits": 0, "commits": 0, "subagents": len(files) - 1,
+         "agent_types": collections.Counter()}
+    for path in files[1:]:
+        # Skills preloaded through an agent's `skills` field never show up as Skill calls,
+        # so the agent type is the only trace that, for example, `implementer` had `tdd`.
+        try:
+            with open(path[: -len(".jsonl")] + ".meta.json") as f:
+                s["agent_types"][json.load(f).get("agentType", "?")] += 1
+        except (OSError, json.JSONDecodeError):
+            s["agent_types"]["?"] += 1
     for path in files:
         skills = s["main_skills"] if path == main_file else s["sub_skills"]
         for name, inp in tool_uses(path):
@@ -98,7 +108,10 @@ def main():
         in_main = sum(skill in s["main_skills"] for s in worked)
         in_sub = sum(skill in s["sub_skills"] for s in worked)
         print(f"  {skill:32} {in_main:3} in the main session, {in_sub:3} in a subagent")
-    print(f"\nSubagents run in those sessions: {sum(s['subagents'] for s in worked)}.")
+    agent_types = sum((s["agent_types"] for s in worked), collections.Counter())
+    by_type = ", ".join(f"{name} {n}" for name, n in agent_types.most_common()) or "none"
+    print(f"\nSubagents run in those sessions: {sum(s['subagents'] for s in worked)} ({by_type}).")
+    print("Skills preloaded by an agent definition (implementer: tdd, verification-before-completion) are not Skill calls and are not counted above.")
     print("Edits counts Edit/Write calls on code files only; code written through Bash (sed, heredocs) is not counted.")
 
 

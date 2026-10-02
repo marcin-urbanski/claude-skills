@@ -1,10 +1,10 @@
 # claude-skills
 
-This repo is the source of truth for my Claude skills (`handoff`, `spec-first`, `tdd`, `systematic-debugging`, `verification-before-completion`, `ux-principles`) and the `handoff` hooks (`handoff-load.sh`, `handoff-nudge.sh`). Files in this repo (skills, README, commits) are written in English.
+This repo is the source of truth for my Claude skills (`handoff`, `spec-first`, `tdd`, `systematic-debugging`, `verification-before-completion`, `ux-principles`), the subagents `spec-first` delegates to (`implementer`, `reviewer`) and the `handoff` hooks (`handoff-load.sh`, `handoff-nudge.sh`). Files in this repo (skills, README, commits) are written in English.
 
 ## How the repo is wired to Claude
 
-- `~/.claude/skills/<skill>` and `~/.claude/hooks/*.sh` are symlinks into `~/Developer/claude-skills`. Every Claude Code session on this Mac loads whatever is checked out there, uncommitted edits included.
+- `~/.claude/skills/<skill>`, `~/.claude/agents/*.md` and `~/.claude/hooks/*.sh` are symlinks into `~/Developer/claude-skills`. Every Claude Code session on this Mac loads whatever is checked out there, uncommitted edits included.
 - `ux-principles` has no local symlink. It reaches Claude through claude.ai sync. `handoff` is both symlinked and uploaded to claude.ai.
 - `~/.claude/skills/synced/` has not updated since 21.09 and has no effect on the app. Ignore it.
 

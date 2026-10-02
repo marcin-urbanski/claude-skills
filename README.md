@@ -1,6 +1,6 @@
 # Claude skills
 
-The skills and hooks I use every day with [Claude Code](https://code.claude.com). This repo is also where they live: the folders in `~/.claude/skills` on my Mac are symlinks to it, so every change is tracked in git.
+The skills, subagents and hooks I use every day with [Claude Code](https://code.claude.com). This repo is also where they live: the folders in `~/.claude/skills` on my Mac are symlinks to it, so every change is tracked in git.
 
 ## Skills
 
@@ -13,9 +13,18 @@ The skills and hooks I use every day with [Claude Code](https://code.claude.com)
 | [verification-before-completion](skills/verification-before-completion/SKILL.md) | Run the tests, linters and build before saying something works. |
 | [ux-principles](skills/ux-principles/SKILL.md) | My UI/UX rulebook: avoiding generic AI-looking design, conversion psychology within honest limits, visual craft, interaction and app patterns, e-commerce product pages, and native iPhone, iPad and Mac apps. |
 
+## Subagents
+
+`spec-first` delegates each task of an epic to these two. Defining them as files, instead of writing the instructions into every delegation prompt, means the implementer always starts with the `tdd` and `verification-before-completion` skills loaded (the `skills` frontmatter field), whether or not it would have invoked them itself.
+
+| Subagent | What it's for |
+|---|---|
+| [implementer](agents/implementer.md) | Builds one task from a plan test-first, verifies, commits, and reports RED/GREEN output. Cannot spawn subagents. |
+| [reviewer](agents/reviewer.md) | Read-only review of a diff for reuse, security, best practices and spec compliance, with a verdict and findings by severity. |
+
 ## Hooks
 
-Both hooks belong to `handoff`.
+The first two hooks belong to `handoff`.
 
 - [`handoff-load.sh`](hooks/handoff-load.sh) (SessionStart) loads `docs/handoff.md` into a new session, unless it is marked `done`.
 - [`handoff-nudge.sh`](hooks/handoff-nudge.sh) (Stop) asks Claude to write a handoff once the session transcript passes about 2.5 MB. Change the limit with `HANDOFF_NUDGE_BYTES`.
@@ -64,7 +73,7 @@ git clone https://github.com/marcin-urbanski/claude-skills.git ~/Developer/claud
 ln -s ~/Developer/claude-skills/skills/handoff ~/.claude/skills/handoff
 ```
 
-Link the hooks the same way into `~/.claude/hooks/`. Claude Code follows symlinked skill folders, so `git pull` is enough to update.
+Link the hooks the same way into `~/.claude/hooks/`, and the subagent files into `~/.claude/agents/`. Claude Code follows symlinked skill folders, so `git pull` is enough to update.
 
 For claude.ai, zip a skill folder (for example `handoff/` with its `SKILL.md`) and upload it under Customize → Skills.
 
