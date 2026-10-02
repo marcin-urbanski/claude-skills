@@ -36,6 +36,25 @@ They need `jq`. Register them in `~/.claude/settings.json`:
 }
 ```
 
+### Seeing which skills Claude invoked
+
+A skill call is easy to miss in the chat. This inline hook (no script needed) prints a line like `🔧 skill: tdd` each time Claude invokes a skill, marked `(subagent)` when a subagent did:
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "Skill",
+        "hooks": [{ "type": "command", "command": "jq -c '{systemMessage: (\"🔧 skill: \" + (.tool_input.skill // \"?\") + (if .agent_id then \" (subagent)\" else \"\" end))}'" }] }
+    ]
+  }
+}
+```
+
+## Scripts
+
+- [`skill-usage.py`](scripts/skill-usage.py) reads the local transcripts in `~/.claude/projects` and reports, per session, which skills the main session and its subagents invoked, next to the number of code edits and commits. Use it to check whether the skills are actually used: `scripts/skill-usage.py TimeTracker --since 2026-09-30`.
+
 ## Install
 
 Clone the repo and link the skills you want into your personal skills folder:
