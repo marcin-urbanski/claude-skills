@@ -47,7 +47,8 @@ Ask only questions whose answers change the design, and ask them before the spec
 1. Write the spec to `docs/specs/YYYY-MM-DD-<topic>.md` with the same sections as above, plus data model, integrations, error handling and migration/rollout where relevant. Ask the user to review it; wait for approval.
 2. Write the plan to `docs/plans/YYYY-MM-DD-<topic>.md`:
    - Header: goal, link to the spec, branch name, global constraints (exact values, formats, security rules every task must respect).
-   - Tasks, each with: files, what to reuse, acceptance criteria covered, the tests to write first, and a done check (command + expected result).
+   - Tasks, each with: an **In short** line, files, what to reuse, acceptance criteria covered, the tests to write first, and a done check (command + expected result).
+   - **In short** is one short sentence for the user (about 15 words at most), in plain words: the gist of what the task changes and what they will see or get when it is done, not a list of everything it does. No codes the user would have to look up (mockup IDs, AC numbers, internal type names). The task title alone is not enough; the rest of the task is for the implementer.
    - Tasks ordered so each leaves the app working and tests green.
 3. Commit spec and plan on the feature branch only if the project keeps docs in git; otherwise leave them untracked.
 
@@ -65,6 +66,18 @@ Create the branch first (per global git rules). Then, per task:
 - Reviewer prompt: `reviewer-prompt.md` in this folder, filled in with the task, constraints and the commit range.
 - Critical or Important findings go back to the implementer; re-review only the fix. Minor findings are listed for the user.
 - Do not trust any report: check `git diff` and the test output yourself before moving on.
+
+Tell the user where you are, so they never meet a bare task number. Write it in the language of the conversation, labels included (the examples below are English only for illustration):
+
+- **Starting a part of the plan** (a PR or group of tasks), and at the start of every session that continues the plan: what just finished, which part comes now and how many there are, then all its tasks, one line each:
+  ```text
+  Part 4 (week and month) is finished. Now part 5 of 6: menu bar. It contains:
+  5.1 – "Menu bar shows" setting, starting from the end of the last entry, today's progress
+  5.2 – menu bar icon with a running clock, and the classic menu on right-click
+  ```
+  In the middle of a part, mark finished tasks with ✓ and the next one with →.
+- **Each further task in the same part:** one line before you dispatch the implementer, such as `Task 5.2: menu bar icon with a running clock, and the classic menu on right-click`.
+- The short description is the task's **In short** line, translated if the plan is in another language. If the plan has none, write one in the same way from the task's text: one short sentence, the gist, not a list of features. Never only the title.
 
 Use `handoff` between sessions on epics.
 
