@@ -14,7 +14,7 @@ Write the state of the current work to `docs/handoff.md` in the project root, so
 - Only include what the next session needs. Leave out anything already in `CLAUDE.md`.
 - Never include secrets, API keys, passwords or `.env` values.
 - **Status** is about the whole goal, not the last task. Finishing one task, subtask or part of a plan is `in-progress`. Use `done` only when nothing is left in Next steps; then keep only Goal and Done.
-- **Plan in progress** (an epic from `spec-first`, file in `docs/plans/`): name the plan and spec files and list only the remaining task numbers and titles. The plan holds the details; do not copy them.
+- **Plan in progress** (an epic from `spec-first`, file in `docs/plans/`): name the plan and spec files and list only the remaining tasks, each as `Task N: <short description>`, numbered as in the plan (for example `Task 5.2`) and with "Task" in the conversation's language. The description is the task's **In short** line from the plan, or, if it has none, one short plain sentence (about 15 words) written from the task's text: the gist of what the user will see or get, not a list of features, no codes or type names they would have to look up, and never only the title. The plan holds the details; do not copy anything else from it.
 - **Language**: write the content in the language of this conversation. These parts stay exactly as in the template in every language (the SessionStart hook reads `Status:`, and a fixed layout keeps handoffs comparable): the `# Handoff:` title prefix, the `Status:`, `Updated:` and `Branch:` keys, the values `in-progress` and `done`, and the `##` section headings.
 
 ## Before writing
@@ -60,7 +60,7 @@ Your final message, including the prompt, is in the language of this conversatio
 
 1. **One line**: where the handoff was written.
 2. **The prompt**, in a fenced `text` block. Choose the form by where the next session will start:
-   - **Same folder** (the default when the user names no other place): 1–3 lines. Name the one next step from Next steps, and for a plan also the plan file. Shape: `<continue from docs/handoff.md and docs/plans/<plan>.md>. <start with task N: title>.`
+   - **Same folder** (the default when the user names no other place): 1–3 lines. Name the one next step from Next steps, and for a plan also the plan file. Shape: `<continue from docs/handoff.md and docs/plans/<plan>.md>. <start with task N: short description>.`
    - **Different folder, another tool, or the handoff sits in a folder that will be deleted** (for example an app scratch workspace): the hook will not find the file, so the prompt must stand alone. Include the target folder, the goal, the next steps and the decisions and constraints, taken from the handoff. Up to about 25 lines.
 3. **One line on how to start**: `/clear` or a new session in the same folder, or "open a new session in <folder> and paste the prompt". Say the handoff loads automatically only in the same-folder case.
 
