@@ -1,6 +1,6 @@
 ---
 name: spec-first
-description: Plan code changes before writing them, scaled to the size of the task. Use when starting a feature, a behaviour change, a new module or a larger project in a codebase. A small fix goes straight to tdd; a feature gets a short spec in chat with acceptance criteria and a task list; an epic gets a spec and plan in docs/ and task-by-task execution with independent review. Not for questions, explanations or one-off scripts.
+description: Plan code changes before writing them, scaled to the size of the task. Use when starting a feature, a behaviour change, a new module or a larger project in a codebase. A small fix goes straight to tdd; a feature gets a short spec in chat with acceptance criteria and a task list; an epic gets a spec and plan in docs/ and task-by-task execution with independent review. Also use when continuing a plan from docs/plans/. Not for questions, explanations or one-off scripts.
 ---
 
 # Spec-first
@@ -48,8 +48,9 @@ Ask only questions whose answers change the design, and ask them before the spec
 2. Write the plan to `docs/plans/YYYY-MM-DD-<topic>.md`:
    - Header: goal, link to the spec, branch name, global constraints (exact values, formats, security rules every task must respect).
    - Tasks, each with: an **In short** line, files, what to reuse, acceptance criteria covered, the tests to write first, and a done check (command + expected result).
-   - **In short** is one short sentence for the user (about 15 words at most), in plain words: the gist of what the task changes and what they will see or get when it is done, not a list of everything it does. No codes the user would have to look up (mockup IDs, AC numbers, internal type names). The task title alone is not enough; the rest of the task is for the implementer.
+   - **In short** is one short sentence for the user (about 15 words), in plain words: the gist of what the task changes and what they will see or get when it is done, not a list of everything it does. No codes the user would have to look up (mockup IDs, AC numbers, internal type names). The task title alone is not enough; the rest of the task is for the implementer.
    - Tasks ordered so each leaves the app working and tests green.
+   - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2).
 3. Commit spec and plan on the feature branch only if the project keeps docs in git; otherwise leave them untracked.
 
 Follow the project's CLAUDE.md for locations if it names others.
@@ -69,15 +70,15 @@ Create the branch first (per global git rules). Then, per task:
 
 Tell the user where you are, so they never meet a bare task number. Write it in the language of the conversation, labels included (the examples below are English only for illustration):
 
-- **Starting a part of the plan** (a PR or group of tasks), and at the start of every session that continues the plan: what just finished, which part comes now and how many there are, then all its tasks, one line each:
+- **Starting a part of the plan**, and at the start of every session that continues the plan: what just finished, which part comes now and how many there are, then all its tasks, one line each:
   ```text
   Part 4 (week and month) is finished. Now part 5 of 6: menu bar. It contains:
-  5.1 – "Menu bar shows" setting, starting from the end of the last entry, today's progress
+  5.1 – a setting for what the menu bar shows
   5.2 – menu bar icon with a running clock, and the classic menu on right-click
   ```
-  In the middle of a part, mark finished tasks with ✓ and the next one with →.
+  When a session resumes inside a part, say which part you are in and mark its tasks as `✓ 5.1 – …` (finished) and `→ 5.2 – …` (next). A plan without parts counts as one part.
 - **Each further task in the same part:** one line before you dispatch the implementer, such as `Task 5.2: menu bar icon with a running clock, and the classic menu on right-click`.
-- The short description is the task's **In short** line, translated if the plan is in another language. If the plan has none, write one in the same way from the task's text: one short sentence, the gist, not a list of features. Never only the title.
+- The short description is the task's **In short** line, translated if the plan is in another language. If the plan has none, write one in the same way from the task's text: one short sentence (about 15 words), the gist, not a list of features. Never only the title.
 
 Use `handoff` between sessions on epics.
 
