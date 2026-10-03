@@ -50,7 +50,7 @@ Ask only questions whose answers change the design, and ask them before the spec
    - Tasks, each with: an **In short** line, files, what to reuse, acceptance criteria covered, the tests to write first, and a done check (command + expected result).
    - **In short** is one short sentence for the user (about 15 words), in plain words: the gist of what the task changes and what they will see or get when it is done, not a list of everything it does. No codes the user would have to look up (mockup IDs, AC numbers, internal type names). The task title alone is not enough; the rest of the task is for the implementer.
    - Tasks ordered so each leaves the app working and tests green.
-   - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2).
+   - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2). A plan without parts is one part; number its tasks 1, 2, 3.
 3. Commit spec and plan on the feature branch only if the project keeps docs in git; otherwise leave them untracked.
 
 Follow the project's CLAUDE.md for locations if it names others.
@@ -76,7 +76,7 @@ Tell the user where you are, so they never meet a bare task number. Write it in 
   5.1 – a setting for what the menu bar shows
   5.2 – menu bar icon with a running clock, and the classic menu on right-click
   ```
-  When a session resumes inside a part, say which part you are in and mark its tasks as `✓ 5.1 – …` (finished) and `→ 5.2 – …` (next). A plan without parts counts as one part.
+  When a session resumes inside a part, say which part you are in and mark its tasks as `✓ 5.1 – …` (finished) and `→ 5.2 – …` (next).
 - **Each further task in the same part:** one line before you dispatch the implementer, such as `Task 5.2: menu bar icon with a running clock, and the classic menu on right-click`.
 - The short description is the task's **In short** line, translated if the plan is in another language. If the plan has none, write one in the same way from the task's text: one short sentence (about 15 words), the gist, not a list of features. Never only the title.
 
