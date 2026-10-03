@@ -8,6 +8,7 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 |---|---|
 | [handoff](skills/handoff/SKILL.md) | Writes `docs/handoff.md` when a session gets long or a task is finished, then gives you a prompt to paste into the next session. Works with the two hooks below. |
 | [spec-first](skills/spec-first/SKILL.md) | Plans a change before any code is written, scaled to its size: a small fix goes straight to tests, a feature gets a short spec, an epic gets a spec, a plan and a review per task. |
+| [design-check](skills/design-check/SKILL.md) | Turns a Claude Design handoff export in `docs/design` into work: a spec for a new project, a report of what changed when a new export lands, and a design check before a UI pull request. |
 | [tdd](skills/tdd/SKILL.md) | Red, green, refactor for every change to production code. |
 | [systematic-debugging](skills/systematic-debugging/SKILL.md) | Find the root cause before fixing anything. |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md) | Run the tests, linters and build before saying something works. |
