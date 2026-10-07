@@ -60,7 +60,7 @@ Skill `spec-first`:
 ## Approach
 
 - `handoff-load.sh` reads stdin JSON (`source`) with `jq`, if available and stdin is not a terminal; without `jq` it behaves as `startup`.
-- Main checkout: `git -C "$CLAUDE_PROJECT_DIR" rev-parse --path-format=absolute --git-common-dir`, then `dirname`. Linked worktree when `--git-dir` differs from `--git-common-dir`.
+- Main checkout: as defined in Terms (`main_checkout` in the hook). Linked worktree when `--git-dir` differs from `--git-common-dir`.
 - Fields are read with `grep -m1 '^Status:'` / `'^Branch:'` as today. Next step: first line starting with `1.` after `## Next steps`.
 - Age by file mtime, as today.
 - Output stays plain stdout (added to Claude's context). The list section is clearly marked and capped.
