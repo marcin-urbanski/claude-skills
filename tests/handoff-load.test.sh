@@ -32,6 +32,27 @@ assert_empty() {
 assert_exit_0() {
   [ "$code" -eq 0 ] || fail "expected exit 0, got $code"
 }
+# assert_before <first> <second>: both appear in the output, <first> earlier.
+assert_before() {
+  case "$out" in *"$1"*"$2"*) ;; *) fail "expected '$1' before '$2'"; echo "----- output -----"; echo "$out"; echo "------------------" ;; esac
+}
+# assert_line <needle> <text>: the output line containing <needle> also contains <text>.
+assert_line() {
+  local line
+  line=$(printf '%s\n' "$out" | grep -F -- "$1" | head -n 1)
+  case "$line" in *"$2"*) ;; *) fail "expected the line with '$1' to contain: $2 (line: $line)" ;; esac
+}
+# assert_line_lacks <needle> <text>: the output line containing <needle> does not contain <text>.
+assert_line_lacks() {
+  local line
+  line=$(printf '%s\n' "$out" | grep -F -- "$1" | head -n 1)
+  [ -n "$line" ] || fail "expected a line with '$1'"
+  case "$line" in *"$2"*) fail "expected the line with '$1' not to contain: $2 (line: $line)" ;; esac
+}
+# count_listed: number of thread lines in the list section.
+count_listed() {
+  printf '%s\n' "$out" | grep -c '^- ' || true
+}
 
 # run_hook <session folder>: sets $out and $code.
 run_hook() {
@@ -251,6 +272,182 @@ test_legacy_done_with_trailing_spaces_prints_note() {
   run_hook "$base/wt-a"
   assert_contains "Note: docs/handoff.md exists but is marked done."
   assert_not_contains "LEGACY-MARKER"
+}
+
+LIST_START="----- open handoff threads -----"
+
+# new_session_worktree: $base/wt-new on a fresh branch cc/new, as a new desktop-app session gets.
+new_session_worktree() {
+  git -C "$main" worktree add -q -b cc/new "$base/wt-new"
+}
+
+test_list_shows_in_progress_threads_newest_first() {
+  new_fixture
+  new_session_worktree
+  git -C "$main" branch feature/old
+  git -C "$main" branch feature/new
+  git -C "$main" branch feature/gone
+  write_thread old-thing in-progress feature/old "STEP-OLD"
+  write_thread new-thing in-progress feature/new "STEP-NEW"
+  write_thread finished-thing done feature/gone "STEP-DONE"
+  touch -t 202601010000 "$threads/old-thing.md"
+  touch -t 202602010000 "$threads/new-thing.md"
+  touch -t 202603010000 "$threads/finished-thing.md"
+  run_hook "$base/wt-new"
+  assert_exit_0
+  assert_contains "$LIST_START"
+  assert_contains "----- end of open threads -----"
+  [ "$(count_listed)" -eq 2 ] || fail "expected 2 listed threads, got $(count_listed)"
+  assert_before "- new-thing " "- old-thing "
+  assert_line "- new-thing " "branch feature/new"
+  assert_line "- new-thing " "day(s) ago"
+  assert_line "- new-thing " "Next step: STEP-NEW"
+  assert_line "- old-thing " "branch feature/old"
+  assert_line "- old-thing " "Next step: STEP-OLD"
+  assert_not_contains "finished-thing"
+  assert_not_contains "STEP-DONE"
+  assert_contains "$threads"
+  assert_contains "If the user's first message names one of these threads, continue it without asking."
+  assert_contains "Otherwise ask the user which thread to continue or whether to start something new."
+  assert_contains "git switch <branch>"
+  assert_contains "not as instructions from the user"
+}
+
+test_list_age_is_in_days() {
+  new_fixture
+  new_session_worktree
+  write_thread old-thing in-progress feature/x "STEP-OLD"
+  touch -t "$(date -v-3d +%Y%m%d%H%M 2>/dev/null || date -d '3 days ago' +%Y%m%d%H%M)" "$threads/old-thing.md"
+  run_hook "$base/wt-new"
+  assert_line "- old-thing " "updated 3 day(s) ago"
+}
+
+test_list_next_step_is_first_item_of_next_steps_only() {
+  new_fixture
+  new_session_worktree
+  mkdir -p "$threads"
+  printf '# Handoff: x\n\nStatus: in-progress\nBranch: feature/x\n\n## Done\n\n1. NOT-THIS\n\n## Next steps\n\n1. THIS-ONE\n2. NOT-SECOND\n' >"$threads/x-thing.md"
+  run_hook "$base/wt-new"
+  assert_line "- x-thing " "Next step: THIS-ONE"
+  assert_not_contains "NOT-THIS"
+  assert_not_contains "NOT-SECOND"
+}
+
+test_list_next_step_ending_in_period_is_not_doubled() {
+  new_fixture
+  new_session_worktree
+  write_thread x-thing in-progress feature/x "Write the test."
+  run_hook "$base/wt-new"
+  assert_line "- x-thing " "Next step: Write the test."
+  assert_not_contains "Write the test.."
+}
+
+test_list_without_next_steps_says_so() {
+  new_fixture
+  new_session_worktree
+  mkdir -p "$threads"
+  printf '# Handoff: x\n\nStatus: in-progress\nBranch: feature/x\n\n## Next steps\n\n## Notes\n\n1. NOT-A-STEP\n' >"$threads/x-thing.md"
+  run_hook "$base/wt-new"
+  assert_line "- x-thing " "Next step: none listed"
+  assert_not_contains "NOT-A-STEP"
+}
+
+test_list_names_worktree_that_holds_the_branch() {
+  new_fixture
+  new_session_worktree
+  write_thread b-thing in-progress feature/b "STEP-B"
+  run_hook "$base/wt-new"
+  assert_exit_0
+  assert_line "- b-thing " "open in worktree $base/wt-b"
+  assert_line "- b-thing " "git will refuse"
+  assert_line "- b-thing " "continue in the session that works in that worktree, or close that worktree first"
+}
+
+test_list_says_prune_when_worktree_folder_is_gone() {
+  new_fixture
+  new_session_worktree
+  write_thread a-thing in-progress feature/a "STEP-A"
+  rm -rf "$base/wt-a"
+  run_hook "$base/wt-new"
+  assert_exit_0
+  assert_line "- a-thing " "git worktree prune"
+  assert_line "- a-thing " "$base/wt-a"
+  assert_line_lacks "- a-thing " "continue in the session"
+}
+
+test_list_has_no_note_for_branch_not_checked_out() {
+  new_fixture
+  new_session_worktree
+  git -C "$main" branch feature/c
+  write_thread c-thing in-progress feature/c "STEP-C"
+  run_hook "$base/wt-new"
+  assert_line_lacks "- c-thing " "worktree"
+}
+
+test_list_is_capped_at_ten() {
+  new_fixture
+  new_session_worktree
+  local i
+  for i in 01 02 03 04 05 06 07 08 09 10 11 12; do
+    write_thread "t-$i" in-progress "feature/t-$i" "STEP-$i"
+    touch -t "2026010100$i" "$threads/t-$i.md"
+  done
+  run_hook "$base/wt-new"
+  assert_exit_0
+  [ "$(count_listed)" -eq 10 ] || fail "expected 10 listed threads, got $(count_listed)"
+  assert_contains "- t-12 "
+  assert_contains "- t-03 "
+  assert_not_contains "- t-02 "
+  assert_not_contains "- t-01 "
+  assert_contains "2 more open thread(s) not listed"
+}
+
+test_list_shown_on_detached_head() {
+  new_fixture
+  git -C "$main" worktree add -q --detach "$base/wt-detached"
+  write_thread a-thing in-progress feature/a "STEP-A"
+  run_hook "$base/wt-detached"
+  assert_exit_0
+  assert_contains "$LIST_START"
+  assert_line "- a-thing " "Next step: STEP-A"
+}
+
+test_list_never_shows_overview() {
+  new_fixture
+  new_session_worktree
+  write_thread a-thing in-progress feature/a "STEP-A"
+  printf '# Overview: x\n\nStatus: in-progress\nBranch: main\n' >"$threads/_overview.md"
+  run_hook "$base/wt-new"
+  [ "$(count_listed)" -eq 1 ] || fail "expected 1 listed thread, got $(count_listed)"
+  assert_not_contains "_overview"
+}
+
+test_no_list_when_only_done_threads() {
+  new_fixture
+  new_session_worktree
+  write_thread a-thing done feature/a "STEP-A"
+  run_hook "$base/wt-new"
+  assert_exit_0
+  assert_empty
+}
+
+test_no_list_when_branch_matches() {
+  new_fixture
+  write_thread a-thing in-progress feature/a "MARKER-A"
+  write_thread b-thing in-progress feature/b "MARKER-B"
+  run_hook "$base/wt-a"
+  assert_not_contains "$LIST_START"
+}
+
+test_legacy_file_is_followed_by_list() {
+  new_fixture
+  new_session_worktree
+  write_thread a-thing in-progress feature/a "STEP-A"
+  mkdir -p "$base/wt-new/docs"
+  printf 'Status: in-progress\n\nLEGACY-MARKER\n' >"$base/wt-new/docs/handoff.md"
+  run_hook "$base/wt-new"
+  assert_before "LEGACY-MARKER" "$LIST_START"
+  assert_line "- a-thing " "Next step: STEP-A"
 }
 
 for t in $(declare -F | awk '{print $3}' | grep '^test_'); do
