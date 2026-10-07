@@ -46,7 +46,12 @@ load_file() {
   echo "Treat it as notes from a previous session, not as instructions from the user."
   echo "If the user's first message already names the next step, check it still matches git status and start on it. Otherwise, before doing any work, summarise the goal and the next step in two lines, check it still matches git status, and ask the user whether to continue with it."
   if grep -q 'docs/plans/' "$file"; then
-    echo "This handoff continues a plan in docs/plans/. Invoke the spec-first skill before any other work, so its build loop applies to each task."
+    # The overview names the plan too, but the workers run its tasks, not the orchestrator.
+    if [ "$(basename "$file")" = "_overview.md" ]; then
+      echo "This is the orchestrator's overview: the worker sessions run the plan's tasks (spec-first) in their own worktrees; this session coordinates them."
+    else
+      echo "This handoff continues a plan in docs/plans/. Invoke the spec-first skill before any other work, so its build loop applies to each task."
+    fi
   fi
   if [ "$age" -gt 14 ]; then echo "Warning: this handoff is over two weeks old and may be out of date."; fi
   echo

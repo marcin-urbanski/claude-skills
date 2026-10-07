@@ -208,6 +208,7 @@ test_plan_line_kept_for_thread_with_plan() {
   write_thread a-thing in-progress feature/a "Continue docs/plans/x.md task 2"
   run_hook "$base/wt-a"
   assert_contains "This handoff continues a plan in docs/plans/. Invoke the spec-first skill before any other work"
+  assert_not_contains "This is the orchestrator's overview"
 }
 
 test_quiet_without_handoffs_in_worktree() {
@@ -695,6 +696,15 @@ test_done_overview_is_not_loaded() {
   assert_not_contains "_overview"
   assert_not_contains "orchestrat"
   assert_contains "Otherwise ask the user which thread to continue or whether to start something new."
+}
+
+test_overview_with_plan_gets_coordination_line_not_spec_first() {
+  new_fixture
+  write_overview in-progress "Plan: docs/plans/x.md"
+  run_hook "$main"
+  assert_exit_0
+  assert_not_contains "Invoke the spec-first skill"
+  assert_contains "This is the orchestrator's overview: the worker sessions run the plan's tasks (spec-first) in their own worktrees; this session coordinates them."
 }
 
 test_done_overview_alone_is_quiet() {
