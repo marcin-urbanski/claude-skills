@@ -78,8 +78,9 @@ main_checkout() {
   if [ "$2" = "$3" ]; then
     # This is the main checkout (normal repo, submodule or --separate-git-dir).
     git -C "$1" rev-parse --show-toplevel 2>/dev/null || true
-  elif [ -n "$(git config --file "$3/config" core.worktree 2>/dev/null || true)" ]; then
-    # Linked worktree of a submodule: the common dir in <super>/.git/modules names its working tree.
+  elif [ -n "$(git --git-dir="$3" config core.worktree 2>/dev/null || true)" ]; then
+    # Linked worktree of a submodule: the common dir in <super>/.git/modules names its working tree
+    # (in config, or in config.worktree once extensions.worktreeConfig is on).
     git --git-dir="$3" rev-parse --show-toplevel 2>/dev/null || true
   elif [ "$(basename "$3")" = ".git" ]; then
     dirname "$3"

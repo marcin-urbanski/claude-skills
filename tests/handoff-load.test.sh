@@ -846,6 +846,19 @@ test_submodule_worktree_loads_thread_from_submodule_checkout() {
   assert_contains "----- $sub_threads/w-thing.md -----"
 }
 
+test_submodule_worktree_with_sparse_checkout_loads_thread_from_submodule_checkout() {
+  new_submodule_fixture
+  git -C "$sub" worktree add -q -b feature/w "$base/sub-wt"
+  # Turns on extensions.worktreeConfig, which moves core.worktree into config.worktree.
+  git -C "$base/sub-wt" sparse-checkout set --no-cone '/*'
+  threads="$sub_threads"
+  write_thread w-thing in-progress feature/w "MARKER-W"
+  run_hook "$base/sub-wt"
+  assert_exit_0
+  assert_contains "MARKER-W"
+  assert_contains "----- $sub_threads/w-thing.md -----"
+}
+
 test_submodule_worktree_names_submodule_checkout_that_holds_the_branch() {
   new_submodule_fixture
   git -C "$sub" worktree add -q -b feature/w "$base/sub-wt"

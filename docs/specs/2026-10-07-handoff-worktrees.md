@@ -11,7 +11,7 @@ Seen in practice on MemoryMatch: three worker sessions (`feature/board-screen`, 
 
 ## Terms
 
-- **Main checkout**: the repo's primary working tree, the same for every worktree of the repo: `git rev-parse --show-toplevel` in the main checkout itself; from a linked worktree, the working tree named by the common dir's `core.worktree` (submodules are supported this way), otherwise `dirname` of `git rev-parse --path-format=absolute --git-common-dir`.
+- **Main checkout**: the repo's primary working tree, the same for every worktree of the repo: `git rev-parse --show-toplevel` in the main checkout itself; from a linked worktree, the working tree named by the common dir's `core.worktree` (submodules are supported this way); otherwise, if the common dir (`git rev-parse --path-format=absolute --git-common-dir`) is named `.git`, its parent; otherwise none (out of scope).
 - **Thread**: one line of work with a goal, for example "best score". It may span several branches (one per PR of a plan).
 - **Thread file**: `<main checkout>/docs/handoffs/<slug>.md`, `<slug>` in kebab-case from the task name (`[a-z0-9-]`), not from the branch.
 - **Overview**: `<main checkout>/docs/handoffs/_overview.md`, written only by the orchestrator session. The leading underscore keeps it apart from thread slugs.
