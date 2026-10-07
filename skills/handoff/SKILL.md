@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Write or update this thread's handoff in docs/handoffs/<slug>.md in the repo's main checkout (or, for an orchestrator session, docs/handoffs/_overview.md) so the next Claude Code session, in any worktree of the repo, can continue this work from a clean context. Use when the user says handoff, wrap up, save progress, or before /clear on unfinished work, when a task or part of a plan is finished and the rest continues in a new session, or when a hook asks for a handoff.
+description: Write or update this thread's handoff file in docs/handoffs/ in the repo's main checkout (or, for an orchestrator session, docs/handoffs/_overview.md) so the next Claude Code session, in any worktree of the repo, can continue this work from a clean context. Use when the user says handoff, wrap up, save progress, or before /clear on unfinished work, when a task or part of a plan is finished and the rest continues in a new session, or when a hook asks for a handoff.
 ---
 
 # Handoff

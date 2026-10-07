@@ -30,7 +30,7 @@ The change reaches sessions only after that `pull`, because the symlinks point a
 
 These two also live in claude.ai, so a change is not live there until re-uploaded.
 
-1. Build a ZIP whose top-level folder is named after the skill, from the checkout that has the change (the worktree, or `~/Developer/claude-skills` after the pull):
+1. Run `bash tests/skill-frontmatter.test.sh`: claude.ai rejects a description containing `<` or `>`. Then build a ZIP whose top-level folder is named after the skill, from the checkout that has the change (the worktree, or `~/Developer/claude-skills` after the pull):
    ```bash
    cd skills && zip -r ~/Downloads/<skill>.zip <skill> -x '*.DS_Store'
    ```
