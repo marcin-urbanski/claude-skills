@@ -16,7 +16,7 @@ dir="${CLAUDE_PROJECT_DIR:-$PWD}"
 { : 3<&0; } 2>/dev/null || exec </dev/null
 source=""
 if [ ! -t 0 ] && command -v jq >/dev/null 2>&1; then
-  source=$(jq -r '.source // empty' 2>/dev/null || true)
+  source=$(jq -r '.source // empty' 2>/dev/null) || source=""
 fi
 
 # status_of <path>: the Status: value, trimmed, in lower case.
@@ -109,9 +109,18 @@ if [ -n "$threads" ] && [ -f "$threads/_overview.md" ] && [ -r "$threads/_overvi
 fi
 
 # ask_orchestrator: the one question for the orchestrator's session, replacing the generic ones.
+# It offers only the choices printed above: open threads, and a legacy file that is not done.
 ask_orchestrator() {
+  local choices="continue orchestrating"
+  if [ -n "$open" ]; then choices="$choices, continue one of the open threads here"; fi
+  if [ -n "$legacy_loaded" ]; then choices="$choices, continue the docs/handoff.md above"; fi
+  if [ "$choices" = "continue orchestrating" ]; then
+    choices="$choices or start something new"
+  else
+    choices="$choices, or start something new"
+  fi
   echo
-  echo "This is the orchestrator's session: it runs in the main checkout and the overview above coordinates the threads of work. If the user's first message already says what to do, do it. Otherwise ask the user one question instead of the ones above: continue orchestrating, continue one of the open threads here, or start something new."
+  echo "This is the orchestrator's session: it runs in the main checkout and the overview above coordinates the threads of work. If the user's first message already says what to do, do it. Otherwise ask the user one question instead of the ones above: $choices."
 }
 
 said=""
@@ -120,10 +129,12 @@ if [ -n "$overview" ]; then
   said=1
 fi
 legacy="$dir/docs/handoff.md"
+legacy_loaded=""
 if [ -f "$legacy" ]; then
   if [ -n "$said" ]; then echo; fi
   load_file "$legacy" "docs/handoff.md"
   said=1
+  if [ "$(status_of "$legacy")" != "done" ]; then legacy_loaded=1; fi
 fi
 if [ -z "$open" ]; then
   if [ -n "$overview" ]; then ask_orchestrator; fi
