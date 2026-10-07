@@ -316,8 +316,11 @@ test_list_shows_in_progress_threads_newest_first() {
 test_list_age_is_in_days() {
   new_fixture
   new_session_worktree
+  local then
   write_thread old-thing in-progress feature/x "STEP-OLD"
-  touch -t "$(date -v-3d +%Y%m%d%H%M 2>/dev/null || date -d '3 days ago' +%Y%m%d%H%M)" "$threads/old-thing.md"
+  # Three days and two minutes ago in epoch seconds, so a DST change cannot shift the day count.
+  then=$(( $(date +%s) - 3 * 86400 - 120 ))
+  touch -t "$(date -r "$then" +%Y%m%d%H%M 2>/dev/null || date -d "@$then" +%Y%m%d%H%M)" "$threads/old-thing.md"
   run_hook "$base/wt-new"
   assert_line "- old-thing " "updated 3 day(s) ago"
 }
@@ -358,9 +361,31 @@ test_list_names_worktree_that_holds_the_branch() {
   write_thread b-thing in-progress feature/b "STEP-B"
   run_hook "$base/wt-new"
   assert_exit_0
-  assert_line "- b-thing " "open in worktree $base/wt-b"
-  assert_line "- b-thing " "git will refuse"
-  assert_line "- b-thing " "continue in the session that works in that worktree, or close that worktree first"
+  assert_line "- b-thing " "Open in worktree $base/wt-b;"
+  assert_line "- b-thing " "\`git switch\` will fail here"
+  assert_line "- b-thing " "continue in that worktree's session or close it first"
+}
+
+test_list_names_main_checkout_that_holds_the_branch() {
+  new_fixture
+  new_session_worktree
+  write_thread m-thing in-progress main "STEP-M"
+  run_hook "$base/wt-new"
+  assert_exit_0
+  assert_line "- m-thing " "Open in the main checkout $main;"
+  assert_line "- m-thing " "\`git switch\` will fail here"
+  assert_line "- m-thing " "continue in that checkout's session or switch it to another branch first"
+  assert_line_lacks "- m-thing " "close it first"
+}
+
+test_list_handles_worktree_paths_with_spaces() {
+  new_fixture
+  git -C "$main" worktree add -q -b cc/spaced "$base/my session"
+  git -C "$main" worktree add -q -b feature/s "$base/wt with space"
+  write_thread s-thing in-progress feature/s "STEP-S"
+  run_hook "$base/my session"
+  assert_exit_0
+  assert_line "- s-thing " "Open in worktree $base/wt with space;"
 }
 
 test_list_says_prune_when_worktree_folder_is_gone() {
@@ -370,9 +395,32 @@ test_list_says_prune_when_worktree_folder_is_gone() {
   rm -rf "$base/wt-a"
   run_hook "$base/wt-new"
   assert_exit_0
-  assert_line "- a-thing " "git worktree prune"
-  assert_line "- a-thing " "$base/wt-a"
-  assert_line_lacks "- a-thing " "continue in the session"
+  assert_line "- a-thing " "Its worktree folder $base/wt-a is gone;"
+  assert_line "- a-thing " "\`git worktree prune\` frees the branch"
+  assert_line_lacks "- a-thing " "session"
+}
+
+test_list_thread_without_branch_line_says_to_ask() {
+  new_fixture
+  new_session_worktree
+  mkdir -p "$threads"
+  printf '# Handoff: x\n\nStatus: in-progress\n\n## Next steps\n\n1. STEP-X\n' >"$threads/x-thing.md"
+  run_hook "$base/wt-new"
+  assert_exit_0
+  assert_line "- x-thing " "branch not set; ask the user which branch"
+}
+
+test_list_skips_unreadable_thread_file() {
+  new_fixture
+  new_session_worktree
+  write_thread a-thing in-progress feature/x "STEP-A"
+  write_thread locked-thing in-progress feature/y "STEP-LOCKED"
+  chmod 000 "$threads/locked-thing.md"
+  run_hook "$base/wt-new"
+  chmod 644 "$threads/locked-thing.md"
+  assert_exit_0
+  assert_line "- a-thing " "Next step: STEP-A"
+  assert_not_contains "locked-thing"
 }
 
 test_list_has_no_note_for_branch_not_checked_out() {

@@ -54,7 +54,7 @@ next_step_of() {
   awk '
     /^## / { if (in_steps) exit; if ($0 ~ /^## Next steps/) in_steps = 1; next }
     in_steps && /^1\./ { sub(/^1\.[[:space:]]*/, ""); sub(/[[:space:]]+$/, ""); print; exit }
-  ' "$1"
+  ' "$1" || true
 }
 
 # Thread files sit in the main checkout, found through the git common dir. Not a git repo: none.
@@ -72,7 +72,7 @@ match=""
 match_mtime=-1
 if [ -d "$threads" ]; then
   for f in "$threads"/*.md; do
-    [ -f "$f" ] || continue
+    [ -f "$f" ] && [ -r "$f" ] || continue
     [ "$(basename "$f")" = "_overview.md" ] && continue
     [ "$(status_of "$f")" = "done" ] && continue
     m=$(mtime_of "$f")
@@ -95,13 +95,14 @@ fi
 [ -n "$open" ] || exit 0
 
 # No thread matches this branch: list the open ones so the user can pick one.
-# Branches checked out in a worktree, one "<branch><TAB><1 if prunable, else 0><TAB><path>" line each.
+# Branches checked out in a worktree, one "<branch><TAB><kind><TAB><path>" line each. Kind is
+# main (the first record: the main checkout), prunable (its folder is gone) or linked.
 worktrees=$(git -C "$dir" worktree list --porcelain 2>/dev/null | awk '
-  /^worktree / { path = substr($0, 10); br = ""; prunable = 0; next }
+  /^worktree / { path = substr($0, 10); br = ""; kind = (n++ == 0) ? "main" : "linked"; next }
   /^branch refs\/heads\// { br = substr($0, 19); next }
-  /^prunable/ { prunable = 1; next }
-  /^$/ { if (br != "") print br "\t" prunable "\t" path; br = "" }
-  END { if (br != "") print br "\t" prunable "\t" path }
+  /^prunable/ { kind = "prunable"; next }
+  /^$/ { if (br != "") print br "\t" kind "\t" path; br = "" }
+  END { if (br != "") print br "\t" kind "\t" path }
 ' || true)
 
 now=$(date +%s)
@@ -115,18 +116,18 @@ printf '%s' "$open" | sort -t $'\t' -k1,1nr -k2,2 | awk 'NR <= 10' | while IFS=$
   b=$(branch_of "$f")
   step=$(next_step_of "$f")
   step=${step%.}
-  line="- $slug (branch ${b:-not set}, updated $(( (now - m) / 86400 )) day(s) ago). Next step: ${step:-none listed}."
+  line="- $slug (branch ${b:-not set; ask the user which branch}, updated $(( (now - m) / 86400 )) day(s) ago). Next step: ${step:-none listed}."
   held=""
   if [ -n "$b" ]; then
     held=$(printf '%s\n' "$worktrees" | B="$b" awk -F '\t' '$1 == ENVIRON["B"]')
   fi
   if [ -n "$held" ]; then
-    IFS=$'\t' read -r _ prunable wt <<<"$held"
-    if [ "$prunable" = "1" ]; then
-      line="$line Its branch is still registered to worktree $wt, whose folder no longer exists: \`git worktree prune\` frees the branch."
-    else
-      line="$line Its branch is open in worktree $wt, so git will refuse \`git switch\` here: continue in the session that works in that worktree, or close that worktree first."
-    fi
+    IFS=$'\t' read -r _ kind wt <<<"$held"
+    case "$kind" in
+      main) line="$line Open in the main checkout $wt; \`git switch\` will fail here: continue in that checkout's session or switch it to another branch first." ;;
+      prunable) line="$line Its worktree folder $wt is gone; \`git worktree prune\` frees the branch." ;;
+      *) line="$line Open in worktree $wt; \`git switch\` will fail here: continue in that worktree's session or close it first." ;;
+    esac
   fi
   echo "$line"
 done
