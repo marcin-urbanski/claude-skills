@@ -33,7 +33,7 @@ If app code exists, the export is unchanged and the user asks to build part of i
    - **Then one task per screen or feature**, citing card IDs (`D1–D6`), in an order that keeps the app working.
    - **State to add** (and any data the screens show) becomes the data model.
    - **Behaviour rules** become acceptance criteria, worded as in the README where possible.
-   - **Sections the README marks as decided** ("don't re-ask", "Decisions") go into the spec as decisions. Never ask the user about them again.
+   - **Sections the README marks as decided** ("don't re-ask", "Decisions") go into the spec as decisions. Never ask the user again whether to do them (mode 2 still asks when).
    - **Every feature that needs more than UI** (storage, network, accounts, sharing, email, background work, a third-party API) gets its untrusted input, access rules and secrets in the spec's Security section.
 4. Commit the export together with the spec on the feature branch, if it is not in git yet.
 
@@ -51,12 +51,12 @@ If app code exists, the export is unchanged and the user asks to build part of i
    - **Changed tokens**: colour, size, radius, spacing or font values.
    - **Changed behaviour rules or decisions**: these change what the code must do, so find the code that implements the old rule.
    - **Copy and small visual changes.**
-3. Check each item against the code with `spec-first`'s reuse check: search for the token, screen or rule in the codebase. Mark each item as already done, change existing code (name the file), or new.
-4. For every new feature, write one line on what it needs beyond UI and what can go wrong. Example: "share link without login: a public endpoint with unguessable, expiring, revocable tokens; email needs a sending service". Flag anything that contradicts an existing rule, a decision, the project's specs (including their non-goals; `CLAUDE.md` may link a product spec) or the platform (a native app that emails on a schedule needs a server, or the Mac awake).
-5. Report to the user in the language they write in, not the README's, briefly: the four groups, each item with its card ID and its status. Don't paste the README back. The user's only decision is scope: which new features go in now. Propose a default (changed tokens, rules and small changes always; new features yes, unless they need infrastructure the project does not have) and ask once.
-6. After the answer, hand the in-scope items to `spec-first`, sized by its table. Commit the new export (`docs: update design handoff`) on the feature branch with the first task.
+3. Check each item against the code the way `spec-first`'s reuse check does (search now, invoke the skill in step 6): search for the token, screen or rule in the codebase. Mark each item as already done, change existing code (name the file), or new. A changed rule whose old version was never built is new.
+4. For every new feature, write one line on what it needs beyond UI and what can go wrong. Example: "share link without login: a public endpoint with unguessable, expiring, revocable tokens; email needs a sending service". Flag anything that contradicts an existing rule, a decision, the project's specs (including their non-goals; `CLAUDE.md` may link a product spec) or the platform (a native app that emails on a schedule needs a server, or a Mac that stays awake).
+5. Report to the user in the language they write in, not the README's, briefly: the four groups, each item with its card ID and its status. Don't paste the README back. The user's only decision is scope: which new features go in now. A new feature the README lists among its decisions is still asked about here, because the question is when, not whether. Propose a default (changed tokens, rules and small changes always; new features yes, unless they need infrastructure the project does not have, in which case split them as below) and ask once.
+6. After the answer, hand the in-scope items to `spec-first`, sized by its table. Commit the new export on the feature branch as its own commit (`docs: update design handoff`) before the first task's commit.
 
-Never drop a new feature silently and never build only its UI. Either it is in scope and built fully, or it is listed as out of scope.
+Never drop a new feature silently and never build only its UI. Either it is in scope and built fully, or it is listed as out of scope. A feature may be split when one part works without missing infrastructure (a public link) and another does not (emailing it): propose the buildable part and name the rest under out of scope.
 
 ## 3. Before PR
 
