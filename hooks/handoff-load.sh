@@ -81,11 +81,10 @@ if common=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/d
   branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
 fi
 
-# In-progress thread files (never the overview), one "<mtime><TAB><path>" line each, and the
-# newest one whose Branch: is the current branch.
+# In-progress thread files (never the overview), one "<mtime><TAB><path>" line each: all of
+# them, and those whose Branch: is the current branch.
 open=""
-match=""
-match_mtime=-1
+matches=""
 if [ -d "$threads" ]; then
   for f in "$threads"/*.md; do
     [ -f "$f" ] && [ -r "$f" ] || continue
@@ -94,12 +93,24 @@ if [ -d "$threads" ]; then
     m=$(mtime_of "$f")
     open="$open$m"$'\t'"$f"$'\n'
     [ -n "$branch" ] && [ "$(branch_of "$f")" = "$branch" ] || continue
-    if [ "$m" -gt "$match_mtime" ]; then match="$f"; match_mtime="$m"; fi
+    matches="$matches$m"$'\t'"$f"$'\n'
   done
 fi
-if [ -n "$match" ]; then
+if [ -n "$matches" ]; then
+  # The newest match is loaded; the others on this branch are named so they stay reachable.
+  sorted=$(printf '%s' "$matches" | sort -t $'\t' -k1,1nr -k2,2)
+  first=${sorted%%$'\n'*}
+  match=${first#*$'\t'}
   # Absolute path: in a linked worktree a relative docs/handoffs/ would point inside the worktree.
   load_file "$match" "$match"
+  others=""
+  while IFS=$'\t' read -r _ f; do
+    [ -n "$f" ] || continue
+    others="${others:+$others, }$(basename "$f" .md) ($f)"
+  done <<<"$(printf '%s\n' "$sorted" | awk 'NR > 1')"
+  if [ -n "$others" ]; then
+    echo "Other open threads on this branch: $others. If the user means one of them, read that file instead."
+  fi
   exit 0
 fi
 # After compaction the session already knows its work: no overview, legacy file or list.

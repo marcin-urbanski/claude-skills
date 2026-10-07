@@ -131,6 +131,7 @@ test_loads_only_thread_for_current_branch() {
   run_hook "$base/wt-b"
   assert_contains "MARKER-B"
   assert_not_contains "MARKER-A"
+  assert_not_contains "Other open threads on this branch"
 }
 
 test_branch_value_is_trimmed() {
@@ -150,6 +151,23 @@ test_newest_of_several_matching_threads_is_loaded() {
   run_hook "$base/wt-a"
   assert_contains "MARKER-NEWER"
   assert_not_contains "MARKER-OLDER"
+  assert_before "----- end of handoff -----" "Other open threads on this branch: a-older ($threads/a-older.md). If the user means one of them, read that file instead."
+}
+
+test_all_other_matching_threads_are_named_newest_first() {
+  new_fixture
+  write_thread a-oldest in-progress feature/a "MARKER-OLDEST"
+  write_thread b-middle in-progress feature/a "MARKER-MIDDLE"
+  write_thread c-newest in-progress feature/a "MARKER-NEWEST"
+  write_thread d-done done feature/a "MARKER-DONE"
+  touch -t 202601010000 "$threads/a-oldest.md"
+  touch -t 202602010000 "$threads/b-middle.md"
+  touch -t 202603010000 "$threads/c-newest.md"
+  touch -t 202604010000 "$threads/d-done.md"
+  run_hook "$base/wt-a"
+  assert_contains "MARKER-NEWEST"
+  assert_contains "Other open threads on this branch: b-middle ($threads/b-middle.md), a-oldest ($threads/a-oldest.md). If the user means one of them, read that file instead."
+  assert_not_contains "d-done"
 }
 
 test_overview_is_never_matched_by_branch() {
