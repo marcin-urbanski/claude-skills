@@ -77,6 +77,7 @@ Skill `spec-first`:
 - Cleaning up old `done` thread files automatically.
 - Creating or removing worktrees, or launching worker sessions.
 - Syncing handoffs across machines.
+- Bare repositories with linked worktrees: there the common dir has no working tree around it, so "main checkout = dirname of the common dir" does not apply.
 
 ## Rollout
 
