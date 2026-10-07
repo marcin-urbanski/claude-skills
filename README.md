@@ -6,8 +6,8 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 
 | Skill | What it's for |
 |---|---|
-| [handoff](skills/handoff/SKILL.md) | Writes `docs/handoff.md` when a session gets long or a task is finished, then gives you a prompt to paste into the next session. Works with the two hooks below. |
-| [spec-first](skills/spec-first/SKILL.md) | Plans a change before any code is written, scaled to its size: a small fix goes straight to tests, a feature gets a short spec, an epic gets a spec, a plan and a review per task. |
+| [handoff](skills/handoff/SKILL.md) | Writes one handoff per thread of work to `docs/handoffs/<slug>.md` when a session gets long or a task is finished, then gives you a prompt to paste into the next session. The file lives in the repo's main checkout, so it survives the worktree being deleted. A session that coordinates parallel worktree sessions writes `docs/handoffs/_overview.md` instead. Works with the two hooks below. |
+| [spec-first](skills/spec-first/SKILL.md) | Plans a change before any code is written, scaled to its size: a small fix goes straight to tests, a feature gets a short spec, an epic gets a spec and a plan committed on its feature branch, and a review per task. |
 | [design-check](skills/design-check/SKILL.md) | Turns a Claude Design handoff export in `docs/design` into work: a spec for a new project, a report of what changed when a new export lands, and a design check before a UI pull request. |
 | [tdd](skills/tdd/SKILL.md) | Red, green, refactor for every change to production code. |
 | [systematic-debugging](skills/systematic-debugging/SKILL.md) | Find the root cause before fixing anything. |
@@ -27,8 +27,8 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 
 The first two hooks belong to `handoff`.
 
-- [`handoff-load.sh`](hooks/handoff-load.sh) (SessionStart) loads `docs/handoff.md` into a new session, unless it is marked `done`. When the handoff continues a plan in `docs/plans/`, it also tells Claude to invoke `spec-first` first.
-- [`handoff-nudge.sh`](hooks/handoff-nudge.sh) (Stop) asks Claude to write a handoff once the session transcript passes about 2.5 MB. Change the limit with `HANDOFF_NUDGE_BYTES`.
+- [`handoff-load.sh`](hooks/handoff-load.sh) (SessionStart) loads the thread whose `Branch:` matches the current branch, from any worktree of the repo. Otherwise it lists the open threads (slug, branch, age, next step) so Claude can ask which one to continue, and warns when a thread's branch is checked out in another worktree. In the main checkout it also loads `_overview.md` for the orchestrator. It still reads an old `docs/handoff.md`, skips anything marked `done`, and after compaction loads only a branch match. When the handoff continues a plan in `docs/plans/`, it also tells Claude to invoke `spec-first` first.
+- [`handoff-nudge.sh`](hooks/handoff-nudge.sh) (Stop) asks Claude to write this thread's handoff once the session transcript passes about 2.5 MB. Change the limit with `HANDOFF_NUDGE_BYTES`.
 
 They need `jq`. Register them in `~/.claude/settings.json`:
 
@@ -45,6 +45,8 @@ They need `jq`. Register them in `~/.claude/settings.json`:
   }
 }
 ```
+
+To test them, run `bash tests/handoff-load.test.sh` and `bash tests/handoff-nudge.test.sh`. They build temporary repos with worktrees and need only bash, git and `jq`.
 
 ### Seeing which skills Claude invoked
 
