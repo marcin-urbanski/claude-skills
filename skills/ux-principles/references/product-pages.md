@@ -1,6 +1,6 @@
 # Product pages
 
-Rules for e-commerce product pages and catalogue grids (WooCommerce, Shopify, custom). A buyer is answering four questions in order: what is it, can I trust it, what will it cost me, what could go wrong. The page should answer the first three in one glance, handle the fourth at the button, and make acting easy from anywhere. Read `visual-craft.md` for layout, type and colour, and `persuasion-psychology.md` for option selectors and defaults.
+Rules for e-commerce product pages, catalogue grids and checkout (WooCommerce, Shopify, custom). A buyer is answering four questions in order: what is it, can I trust it, what will it cost me, what could go wrong. The page should answer the first three in one glance, handle the fourth at the button, and make acting easy from anywhere. Read `visual-craft.md` for layout, type and colour, and `persuasion-psychology.md` for option selectors and defaults.
 
 ## Contents
 1. Product imagery
@@ -12,6 +12,7 @@ Rules for e-commerce product pages and catalogue grids (WooCommerce, Shopify, cu
 7. Trust badges
 8. Scroll behaviour on mobile
 9. Presets for common choices
+10. Checkout
 
 ---
 
@@ -139,3 +140,21 @@ Rules for e-commerce product pages and catalogue grids (WooCommerce, Shopify, cu
 - Pre-select the most common preset (Smart defaults, `persuasion-psychology.md`).
 
 **Example:** A loose-weight product with only a +/- stepper in 100g steps takes 10 taps to reach 1kg. Presets 500g / 1kg / 2kg with 1kg selected, stepper below for adjustments, gets most buyers there in zero or one tap.
+
+---
+
+## 10. Checkout
+
+**Rule:** Checkout confirms what the buyer pays and collects the least information needed to pay. Nothing new is sold here and nothing surprises.
+
+**Apply:**
+- **Summary in view:** items with quantity and price, delivery, any fees and the total, visible or one tap away on every step. Mandatory fees never appear for the first time here (drip pricing is banned under the DMCC Act, `marketing-pages.md` section 2). When the address decides the delivery cost, show the range or "calculated at the next step" rather than nothing.
+- **Express payment first:** Apple Pay, Google Pay, PayPal and the like as one row above the address form, limited to the wallets the store actually supports. On a phone they replace the whole form, so they come before it, not after it.
+- **Guest by default:** no account wall. Ask for the email first, then the address, and offer an account after the order is placed (`app-patterns.md` section 10). Existing customers get a plain "Have an account? Sign in" link, not a modal.
+- **Sticky pay button on mobile:** the button with the live total ("Pay £43.20") stays reachable while the form scrolls, under the sticky-bar rules in section 8. Never disable it silently: a tap with missing fields scrolls to and focuses the first one.
+- **Form:** one column, the fewest fields that can place the order (company and second address line collapsed behind a link), address lookup where available, the right keyboard and autofill per field (`inputmode`, `autocomplete`). Field rules in `interaction-patterns.md` section 5.
+- **Steps:** one page when the form is short; otherwise 2-3 named steps (Details, Delivery, Payment) with the current one marked and earlier ones editable in place.
+- **Errors:** inline next to the field, in plain words, keeping what was typed. A payment failure says what to do next ("Card declined. Try another card or Apple Pay."), never a code.
+- **Nothing else:** no newsletter prompt, upsell, countdown or open promo-code box that sends the buyer off to search for codes; collapse it to an "Add a discount code" link.
+
+**The line:** No pre-ticked add-ons, cover or marketing consent (defaults guardrail in SKILL.md). The confirmation shows exactly what was charged.
