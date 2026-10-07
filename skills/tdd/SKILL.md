@@ -17,10 +17,10 @@ Adapted from obra/superpowers `test-driven-development` (MIT).
 
 ## The cycle
 
-1. **Red**: write one small test for one behaviour, named after the behaviour. Use the acceptance criteria from the spec as the source of tests.
-2. **Verify red**: run it. It must *fail* (not error) and fail for the expected reason (the feature is missing, not a typo or bad setup). If it passes, it tests existing behaviour; change the test.
+1. **Red**: write one small test for one behaviour, named after the behaviour. Use the acceptance criteria from the spec (or the request, when there is no spec) as the source of tests. If the function or class does not exist yet, add a stub first: the signature with a placeholder body such as `pass`, so the test fails on its assertion instead of stopping with an import or name error.
+2. **Verify red**: run it. It must *fail* (not error) and fail for the expected reason (the feature is missing, not a typo or bad setup). If it passes, it tests existing behaviour; change the test. The exception is a spec edge case the code already handles (a boundary such as `<=`): show it failing once against a deliberate mutation (`<=` to `<`), restore the code, and keep the test.
 3. **Green**: write the simplest code that makes it pass. Reuse existing code; no extra options, no features the test does not need.
-4. **Verify green**: run the test and the neighbouring tests. Output should be clean: no new warnings or deprecations.
+4. **Verify green**: run the test and the neighbouring tests. Output should be clean: no new warnings or deprecations. The whole suite runs before the task is called done (`verification-before-completion`).
 5. **Refactor** while green: remove duplication, improve names, extract helpers. Re-run.
 6. Next behaviour. Commit at the end of a task, not after every cycle.
 

@@ -25,8 +25,10 @@ Adapted from obra/superpowers `verification-before-completion` (MIT).
 | Requirements met | each acceptance criterion checked one by one | tests passing |
 | Subagent finished | `git diff` and test output checked by you | the subagent's report |
 
-## Before a PR
+No linter, static analysis or build step in the project: say so in the report in place of that evidence. Do not install one.
 
-Also check: `git status` is clean apart from intended changes, no debug output or commented-out code, no secrets or `.env` values in the diff (`git diff main...HEAD` and search for keys, tokens, passwords), migrations run both ways if the project uses them.
+## Before a commit or PR
+
+Also check: `git status` is clean apart from intended changes, no debug output or commented-out code, no secrets or `.env` values in the diff (`git diff <base>...HEAD` and search for keys, tokens, passwords), migrations run both ways if the project uses them.
 
 Words like "should", "probably", "looks right" or "Done!" before you have run the check mean you have not verified.

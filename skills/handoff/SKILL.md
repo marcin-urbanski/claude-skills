@@ -7,15 +7,23 @@ description: Write or update this thread's handoff file in docs/handoffs/ in the
 
 Write the state of the current work to this thread's handoff file, so a fresh session can pick it up without re-reading this conversation. Then give the user a prompt to paste into that session.
 
-A **thread** is one line of work with a goal (for example "best score"); it may span several branches, one per PR of a plan. Each thread has one file, `docs/handoffs/<slug>.md`, in the repo's **main checkout**, the same folder from every worktree of the repo. The main checkout is `git rev-parse --show-toplevel` when run there (its git dir is the common dir); from a linked worktree, `git --git-dir="$(git rev-parse --path-format=absolute --git-common-dir)" rev-parse --show-toplevel` if `git --git-dir=<that common dir> config core.worktree` prints a value (submodules), otherwise the parent of the common `.git` dir. If that common dir is not named `.git` (a linked worktree of a `--separate-git-dir` repo), there is no main checkout to use: tell the user the handoff cannot be shared across worktrees and ask where to write it. Never write a handoff inside a linked worktree: it is deleted with the worktree. Not a git repo: use `docs/handoffs/<slug>.md` in the current folder.
+A **thread** is one line of work with a goal (for example "best score"); it may span several branches, one per PR of a plan. Each thread has one file, `docs/handoffs/<slug>.md`, in the repo's **main checkout**, the same folder from every worktree of the repo. Find the main checkout with these commands (they work from anywhere inside the current checkout), first case that applies:
+
+1. `common=$(git rev-parse --path-format=absolute --git-common-dir)`. If it equals `git rev-parse --path-format=absolute --git-dir`, this is the main checkout: `git rev-parse --show-toplevel`.
+2. `git --git-dir="$common" config core.worktree` prints a value (a linked worktree of a submodule): the main checkout is `git --git-dir="$common" rev-parse --show-toplevel`.
+3. `common` ends in `/.git` (a linked worktree of a normal repo): the main checkout is its parent directory.
+4. Otherwise (a linked worktree of a `--separate-git-dir` repo) there is no main checkout to use: tell the user the handoff cannot be shared across worktrees and ask where to write it.
+
+Never write a handoff inside a linked worktree: it is deleted with the worktree. Not a git repo: use `docs/handoffs/<slug>.md` in the current folder.
 
 ## Rules
 
 - **Overwrite** the file. It describes the current state, not a history. Git holds the history.
 - Keep it **under 80 lines**. Be specific: file paths, function names, commands, exact errors. No narrative.
-- Only include what the next session needs. Leave out anything already in `CLAUDE.md`.
+- Only include what the next session needs. Leave out anything already in `CLAUDE.md`, except under Verify with: that section always has the command and what a pass looks like, even when `CLAUDE.md` names the command.
+- Keep every heading of the template (the `done` rule below is the only exception). A section with nothing to say gets one line, `- none`. `Updated` is local time.
 - Never include secrets, API keys, passwords or `.env` values.
-- **Branch** is the branch this thread's commits are on, normally the current branch (`git branch --show-current`), so the file follows a plan onto its next branch. Not a git repo: `none`.
+- **Branch** is the branch this thread's commits are on, normally the current branch (`git branch --show-current`), and is updated when a plan moves to its next branch. Not a git repo: `none`.
 - **Status** is about the whole goal, not the last task. Finishing one task, subtask or part of a plan is `in-progress`. Use `done` only when nothing is left in Next steps; then keep only Goal and Done.
 - **Plan in progress** (an epic from `spec-first`, file in `docs/plans/`): the plan and spec are committed on the thread's branch, so name them by repo path (`docs/plans/<plan>.md`); a new session gets them after `git switch <branch>`. If the plan is untracked (older epics), say so under Gotchas. List only the remaining tasks, each as `Task N: <short description>`, numbered as in the plan (for example `Task 5.2`) and with "Task" in the conversation's language. The description is the task's **In short** line from the plan, or, if it has none, one short plain sentence (about 15 words) written from the task's text: the gist of what the user will see or get, not a list of features, no codes or type names they would have to look up, and never only the title. The plan holds the details; do not copy anything else from it.
 - **Other threads' files**: never edit, overwrite or delete them.
@@ -33,8 +41,8 @@ If this session is the orchestrator, write `_overview.md` (see Orchestrator belo
 
 1. Check `git status` and `git diff --stat` so "Done" reflects what actually changed.
 2. Create `<main checkout>/docs/handoffs/` if it does not exist.
-3. Keep handoffs out of the repo: if `git check-ignore -q docs/handoffs/` fails, append the line `docs/handoffs/` to `<git common dir>/info/exclude` (local, shared by all worktrees, never committed). Do not edit `.gitignore` unless the user asks. Not a git repo: skip this.
-4. **Legacy file**: if the session's folder has `docs/handoff.md` (the old single-file handoff) for the same work, for example because the hook loaded it, carry its still-relevant content (decisions, gotchas, next steps) into the file you write, then delete `docs/handoff.md`. If it describes other unfinished work, leave it.
+3. Keep handoffs out of the repo: if `git check-ignore -q docs/handoffs/` (run at the root of the current checkout) fails, append the line `docs/handoffs/` to `<git common dir>/info/exclude` (local, shared by all worktrees, never committed). Do not edit `.gitignore` unless the user asks. Not a git repo: skip this.
+4. **Legacy file**: if the current checkout has `docs/handoff.md` (the old single-file handoff) for the same work, for example because the hook loaded it, carry its still-relevant content (decisions, gotchas, next steps) into the file you write, then delete `docs/handoff.md`. If it describes other unfinished work, leave it.
 
 ## Format
 
@@ -103,8 +111,12 @@ Your final message, including the prompt, is in the language of this conversatio
 
 1. **One line**: the full path of the file written, plus, if you found a legacy `docs/handoff.md`, that you moved and deleted it (or left it because it describes other work).
 2. **The prompt**, in a fenced `text` block. The shapes below are in English, but write the whole prompt in the conversation's language; only the slug and file paths stay as they are.
-   - **Same repo** (the default, any worktree or the main checkout): 1–3 lines naming the slug and the one next step. Shape: `Continue thread <slug> (<absolute path of the thread file>). <for a plan: invoke spec-first, then start with Task N: short description>.` Orchestrator: `Continue orchestrating from <absolute path of _overview.md>; the workers run spec-first, not this session.` plus the next step.
+   - **Same repo** (the default, any worktree or the main checkout): 1–3 lines naming the slug and the one next step. Shape: `Continue thread <slug> (<absolute path of the thread file>). Start with <the next step>.` For a plan the second sentence is `Invoke spec-first, then start with Task N: <short description>.` Orchestrator: `Continue orchestrating from <absolute path of _overview.md>; the workers run spec-first, not this session.` plus the next step.
    - **Another repo, another tool, or no git**: the hook will not find the file, so the prompt must stand alone. Include the target folder, the goal, the next steps and the decisions and constraints, taken from the handoff, and for a plan, that `spec-first` comes first. Up to about 25 lines.
-3. **How to start**, one or two lines. The hook loads the thread file in any worktree on its branch and otherwise lists it, so the prompt picks it. A branch is checked out in one worktree only: if it still is here, offer `/clear` here, or close this worktree first (archive this session if the app removes its worktree, or `git worktree remove <path>` from the main checkout; in the main checkout, switch branch) and start a new session. Orchestrator: `/clear` or a new session in the main checkout. Stand-alone: "open a new session in <folder> and paste the prompt".
+3. **How to start**, one or two lines. The hook loads the thread file in any worktree on its branch and otherwise lists it, and the prompt names the slug, so the next session finds it either way. A branch is checked out in one worktree at a time, so name the case that applies:
+   - The branch is still checked out here: `/clear` here and paste the prompt.
+   - A new session in another worktree: close this one first. If the app created this worktree, archive this session; otherwise `git worktree remove <path>` from the main checkout. If this is the main checkout, switch it to another branch instead.
+   - Orchestrator: `/clear` or a new session in the main checkout.
+   - Stand-alone (another repo, tool or no git): "open a new session in <folder> and paste the prompt".
 
 If `Status: done`, skip the prompt: say the work is finished and the handoff is marked done.
