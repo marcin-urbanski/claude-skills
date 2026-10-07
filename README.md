@@ -78,7 +78,7 @@ ln -s ~/Developer/claude-skills/skills/handoff ~/.claude/skills/handoff
 
 Link the hooks the same way into `~/.claude/hooks/`, and the subagent files into `~/.claude/agents/`. Claude Code follows symlinked skill folders, so `git pull` is enough to update.
 
-For claude.ai, zip a skill folder (for example `handoff/` with its `SKILL.md`) and upload it under Customize → Skills.
+For claude.ai, zip a skill folder (for example `handoff/` with its `SKILL.md`) and upload it under Customize → Skills. claude.ai rejects a description with XML-like tags, so run `bash tests/skill-frontmatter.test.sh` first: it fails if any skill description contains `<` or `>`.
 
 ## Credits
 
