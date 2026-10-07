@@ -27,7 +27,7 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 
 The first two hooks belong to `handoff`.
 
-- [`handoff-load.sh`](hooks/handoff-load.sh) (SessionStart) loads `docs/handoff.md` into a new session, unless it is marked `done`.
+- [`handoff-load.sh`](hooks/handoff-load.sh) (SessionStart) loads `docs/handoff.md` into a new session, unless it is marked `done`. When the handoff continues a plan in `docs/plans/`, it also tells Claude to invoke `spec-first` first.
 - [`handoff-nudge.sh`](hooks/handoff-nudge.sh) (Stop) asks Claude to write a handoff once the session transcript passes about 2.5 MB. Change the limit with `HANDOFF_NUDGE_BYTES`.
 
 They need `jq`. Register them in `~/.claude/settings.json`:

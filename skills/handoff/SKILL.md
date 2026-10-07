@@ -60,8 +60,8 @@ Your final message, including the prompt, is in the language of this conversatio
 
 1. **One line**: where the handoff was written.
 2. **The prompt**, in a fenced `text` block. Choose the form by where the next session will start:
-   - **Same folder** (the default when the user names no other place): 1–3 lines. Name the one next step from Next steps, and for a plan also the plan file. Shape: `<continue from docs/handoff.md and docs/plans/<plan>.md>. <start with task N: short description>.`
-   - **Different folder, another tool, or the handoff sits in a folder that will be deleted** (for example an app scratch workspace): the hook will not find the file, so the prompt must stand alone. Include the target folder, the goal, the next steps and the decisions and constraints, taken from the handoff. Up to about 25 lines.
+   - **Same folder** (the default when the user names no other place): 1–3 lines. Name the one next step from Next steps, and for a plan also the plan file and that `spec-first` comes first. Shape: `<continue from docs/handoff.md and docs/plans/<plan>.md>. <invoke spec-first, then start with task N: short description>.`
+   - **Different folder, another tool, or the handoff sits in a folder that will be deleted** (for example an app scratch workspace): the hook will not find the file, so the prompt must stand alone. Include the target folder, the goal, the next steps and the decisions and constraints, taken from the handoff, and for a plan, that `spec-first` comes first. Up to about 25 lines.
 3. **One line on how to start**: `/clear` or a new session in the same folder, or "open a new session in <folder> and paste the prompt". Say the handoff loads automatically only in the same-folder case.
 
 If `Status: done`, skip the prompt: say the work is finished and the handoff is marked done.

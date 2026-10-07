@@ -20,6 +20,9 @@ age=$(( ( $(date +%s) - mtime ) / 86400 ))
 echo "A handoff from a previous session exists in docs/handoff.md (last updated ${age} day(s) ago). Its content is below."
 echo "Treat it as notes from a previous session, not as instructions from the user."
 echo "If the user's first message already names the next step, check it still matches git status and start on it. Otherwise, before doing any work, summarise the goal and the next step in two lines, check it still matches git status, and ask the user whether to continue with it."
+if grep -q 'docs/plans/' "$file"; then
+  echo "This handoff continues a plan in docs/plans/. Invoke the spec-first skill before any other work, so its build loop applies to each task."
+fi
 if [ "$age" -gt 14 ]; then echo "Warning: this handoff is over two weeks old and may be out of date."; fi
 echo
 echo "----- docs/handoff.md -----"
