@@ -44,20 +44,20 @@ Ask only questions whose answers change the design, and ask them before the spec
 
 ## 4. Epic: spec and plan files
 
-1. Write the spec to `docs/specs/YYYY-MM-DD-<topic>.md` with the same sections as above, plus data model, integrations, error handling and migration/rollout where relevant. Ask the user to review it; wait for approval.
+1. Write the spec to `docs/specs/YYYY-MM-DD-<topic>.md` with the same sections as above, plus data model, integrations, error handling and migration/rollout where relevant. Ask the user to review it; wait for approval. Then create the feature branch from the base branch (per the project's or global git rules). In a worktree on a placeholder branch, such as the desktop app's `cc/<name>`, switch that worktree to it with `git switch -c feature/<name> <base>` instead of committing on the placeholder.
 2. Write the plan to `docs/plans/YYYY-MM-DD-<topic>.md`:
    - Header: goal, link to the spec, branch name, global constraints (exact values, formats, security rules every task must respect).
    - Tasks, each with: an **In short** line, files, what to reuse, acceptance criteria covered, the tests to write first, and a done check (command + expected result).
    - **In short** is one short sentence for the user (about 15 words), in plain words: the gist of what the task changes and what they will see or get when it is done, not a list of everything it does. No codes the user would have to look up (mockup IDs, AC numbers, internal type names). The task title alone is not enough; the rest of the task is for the implementer.
    - Tasks ordered so each leaves the app working and tests green.
    - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2). A plan without parts is one part; number its tasks 1, 2, 3.
-3. Commit spec and plan on the feature branch only if the project keeps docs in git; otherwise leave them untracked.
+3. Commit spec and plan together on the feature branch as its first commit (e.g. `docs: add spec and plan for <topic>`), before any task starts. A plan left untracked in a worktree disappears with it, and handoffs point at it; committed, any worktree gets it after `git switch <branch>`. If the project's `.gitignore` excludes the docs folder, tell the user and ask before forcing anything; never `git add -f` silently.
 
 Follow the project's CLAUDE.md for locations if it names others.
 
 ## 5. Build
 
-Create the branch first (per global git rules). Then, per task:
+For a fix or feature, create the branch first (per global git rules); an epic already has it from step 4. Then, per task:
 
 **Default (fix, feature):** do the task in this session with `tdd`, then a self-review against `reviewer-checklist.md` in this folder: reuse, security, best practices, spec compliance. Fix what you find. Commit with a conventional message. Next task.
 

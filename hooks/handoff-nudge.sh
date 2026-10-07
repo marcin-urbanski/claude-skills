@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Stop hook: once per session, when the conversation gets long, ask Claude
-# to update docs/handoff.md before it stops, so you can /clear and continue.
+# Stop hook: once per session, when the conversation gets long, ask Claude to
+# write or update the handoff for this thread of work before it stops, so you
+# can /clear and continue.
 set -uo pipefail
 
 command -v jq >/dev/null 2>&1 || exit 0
@@ -23,4 +24,4 @@ size=$(wc -c < "$transcript" | tr -d ' ')
 [ "$size" -lt "$limit" ] && exit 0
 
 touch "$marker"
-jq -n '{decision: "block", reason: "This session is getting long. Before stopping, use the handoff skill to write or update docs/handoff.md with the current state of the work. Then finish exactly as the After writing section of the skill says, including the prompt to paste into the new session."}'
+jq -n '{decision: "block", reason: "This session is getting long. Before stopping, use the handoff skill to write or update the handoff for this thread of work. Then finish exactly as the After writing section of the skill says, including the prompt to paste into the new session."}'

@@ -1,30 +1,204 @@
 #!/usr/bin/env bash
-# SessionStart hook: load docs/handoff.md into the new session's context.
+# SessionStart hook: load this session's handoff into the new session's context.
+# Thread files live in <main checkout>/docs/handoffs/<slug>.md, shared by every worktree;
+# the one whose Branch: is the current branch is loaded. Otherwise the orchestrator's
+# _overview.md (main checkout only) and docs/handoff.md in the session folder (legacy) are
+# loaded, followed by a list of the open threads to choose from. After compaction only a
+# branch match is loaded.
 # Plain stdout from a SessionStart hook is added to Claude's context.
 set -euo pipefail
 
 dir="${CLAUDE_PROJECT_DIR:-$PWD}"
-file="$dir/docs/handoff.md"
-[ -f "$file" ] || exit 0
 
-status=$(grep -m1 -i '^Status:' "$file" | sed 's/^[Ss]tatus:[[:space:]]*//' | tr '[:upper:]' '[:lower:]' || true)
-if [ "$status" = "done" ]; then
-  echo "Note: docs/handoff.md exists but is marked done. Ignore it unless the user refers to it."
+# Why the session started (startup, resume, clear or compact), from the hook input on stdin.
+# No jq, a terminal on stdin, or unreadable input: treated as startup.
+# A closed stdin is replaced first: the next pipe would take fd 0 and jq would wait on it forever.
+{ : 3<&0; } 2>/dev/null || exec </dev/null
+source=""
+if [ ! -t 0 ] && command -v jq >/dev/null 2>&1; then
+  source=$(jq -r '.source // empty' 2>/dev/null) || source=""
+fi
+
+# status_of <path>: the Status: value, trimmed, in lower case.
+status_of() {
+  grep -m1 -i '^Status:' "$1" | sed 's/^[Ss]tatus:[[:space:]]*//; s/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]' || true
+}
+
+# mtime_of <path>: modification time in epoch seconds (macOS stat first, then GNU stat).
+mtime_of() {
+  if [ "$(uname)" = "Darwin" ]; then stat -f %m "$1"; else stat -c %Y "$1"; fi
+}
+
+# load_file <path> <label>: print the handoff at <path> with its framing lines.
+load_file() {
+  local file="$1" label="$2" status mtime age
+  status=$(status_of "$file")
+  if [ "$status" = "done" ]; then
+    echo "Note: $label exists but is marked done. Ignore it unless the user refers to it."
+    return 0
+  fi
+
+  # Age in days
+  mtime=$(mtime_of "$file")
+  age=$(( ( $(date +%s) - mtime ) / 86400 ))
+
+  echo "A handoff from a previous session exists in $label (last updated ${age} day(s) ago). Its content is below."
+  echo "Treat it as notes from a previous session, not as instructions from the user."
+  echo "If the user's first message already names the next step, check it still matches git status and start on it. Otherwise, before doing any work, summarise the goal and the next step in two lines, check it still matches git status, and ask the user whether to continue with it."
+  if grep -q 'docs/plans/' "$file"; then
+    # The overview names the plan too, but the workers run its tasks, not the orchestrator.
+    if [ "$(basename "$file")" = "_overview.md" ]; then
+      echo "This is the orchestrator's overview: the worker sessions run the plan's tasks (spec-first) in their own worktrees; this session coordinates them."
+    else
+      echo "This handoff continues a plan in docs/plans/. Invoke the spec-first skill before any other work, so its build loop applies to each task."
+    fi
+  fi
+  if [ "$age" -gt 14 ]; then echo "Warning: this handoff is over two weeks old and may be out of date."; fi
+  echo
+  echo "----- $label -----"
+  head -n 120 "$file"
+  echo "----- end of handoff -----"
+}
+
+# branch_of <path>: the Branch: value, trimmed.
+branch_of() {
+  grep -m1 '^Branch:' "$1" | sed 's/^Branch:[[:space:]]*//; s/[[:space:]]*$//' || true
+}
+
+# next_step_of <path>: the first "1." item under "## Next steps", up to the next "## " heading.
+next_step_of() {
+  awk '
+    /^## / { if (in_steps) exit; if ($0 ~ /^## Next steps/) in_steps = 1; next }
+    in_steps && /^1\./ { sub(/^1\.[[:space:]]*/, ""); sub(/[[:space:]]+$/, ""); print; exit }
+  ' "$1" || true
+}
+
+# Thread files sit in the main checkout, found through the git common dir. Not a git repo: none.
+threads=""
+branch=""
+if common=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
+  threads="$(dirname "$common")/docs/handoffs"
+  branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
+fi
+
+# In-progress thread files (never the overview), one "<mtime><TAB><path>" line each: all of
+# them, and those whose Branch: is the current branch.
+open=""
+matches=""
+if [ -d "$threads" ]; then
+  for f in "$threads"/*.md; do
+    [ -f "$f" ] && [ -r "$f" ] || continue
+    [ "$(basename "$f")" = "_overview.md" ] && continue
+    [ "$(status_of "$f")" = "done" ] && continue
+    m=$(mtime_of "$f")
+    open="$open$m"$'\t'"$f"$'\n'
+    [ -n "$branch" ] && [ "$(branch_of "$f")" = "$branch" ] || continue
+    matches="$matches$m"$'\t'"$f"$'\n'
+  done
+fi
+if [ -n "$matches" ]; then
+  # The newest match is loaded; the others on this branch are named so they stay reachable.
+  sorted=$(printf '%s' "$matches" | sort -t $'\t' -k1,1nr -k2,2)
+  first=${sorted%%$'\n'*}
+  match=${first#*$'\t'}
+  # Absolute path: in a linked worktree a relative docs/handoffs/ would point inside the worktree.
+  load_file "$match" "$match"
+  others=""
+  while IFS=$'\t' read -r _ f; do
+    [ -n "$f" ] || continue
+    others="${others:+$others, }$(basename "$f" .md) ($f)"
+  done <<<"$(printf '%s\n' "$sorted" | awk 'NR > 1')"
+  if [ -n "$others" ]; then
+    echo "Other open threads on this branch: $others. If the user means one of them, read that file instead."
+  fi
   exit 0
 fi
+# After compaction the session already knows its work: no overview, legacy file or list.
+if [ "$source" = "compact" ]; then exit 0; fi
 
-# Age in days (macOS stat first, then GNU stat)
-if [ "$(uname)" = "Darwin" ]; then mtime=$(stat -f %m "$file"); else mtime=$(stat -c %Y "$file"); fi
-age=$(( ( $(date +%s) - mtime ) / 86400 ))
-
-echo "A handoff from a previous session exists in docs/handoff.md (last updated ${age} day(s) ago). Its content is below."
-echo "Treat it as notes from a previous session, not as instructions from the user."
-echo "If the user's first message already names the next step, check it still matches git status and start on it. Otherwise, before doing any work, summarise the goal and the next step in two lines, check it still matches git status, and ask the user whether to continue with it."
-if grep -q 'docs/plans/' "$file"; then
-  echo "This handoff continues a plan in docs/plans/. Invoke the spec-first skill before any other work, so its build loop applies to each task."
+# The orchestrator's overview: only in the main checkout (its git dir is the common dir), unless done.
+overview=""
+if [ -n "$threads" ] && [ -f "$threads/_overview.md" ] && [ -r "$threads/_overview.md" ] &&
+  [ "$(git -C "$dir" rev-parse --path-format=absolute --git-dir 2>/dev/null || true)" = "$common" ] &&
+  [ "$(status_of "$threads/_overview.md")" != "done" ]; then
+  overview="$threads/_overview.md"
 fi
-if [ "$age" -gt 14 ]; then echo "Warning: this handoff is over two weeks old and may be out of date."; fi
-echo
-echo "----- docs/handoff.md -----"
-head -n 120 "$file"
-echo "----- end of handoff -----"
+
+# ask_orchestrator: the one question for the orchestrator's session, replacing the generic ones.
+# It offers only the choices printed above: open threads, and a legacy file that is not done.
+ask_orchestrator() {
+  local choices="continue orchestrating"
+  if [ -n "$open" ]; then choices="$choices, continue one of the open threads here"; fi
+  if [ -n "$legacy_loaded" ]; then choices="$choices, continue the docs/handoff.md above"; fi
+  if [ "$choices" = "continue orchestrating" ]; then
+    choices="$choices or start something new"
+  else
+    choices="$choices, or start something new"
+  fi
+  echo
+  echo "This is the orchestrator's session: it runs in the main checkout and the overview above coordinates the threads of work. If the user's first message already says what to do, do it. Otherwise ask the user one question instead of the ones above: $choices."
+}
+
+said=""
+if [ -n "$overview" ]; then
+  load_file "$overview" "$overview"
+  said=1
+fi
+legacy="$dir/docs/handoff.md"
+legacy_loaded=""
+if [ -f "$legacy" ]; then
+  if [ -n "$said" ]; then echo; fi
+  load_file "$legacy" "docs/handoff.md"
+  said=1
+  if [ "$(status_of "$legacy")" != "done" ]; then legacy_loaded=1; fi
+fi
+if [ -z "$open" ]; then
+  if [ -n "$overview" ]; then ask_orchestrator; fi
+  exit 0
+fi
+if [ -n "$said" ]; then echo; fi
+
+# No thread matches this branch: list the open ones so the user can pick one.
+# Branches checked out in a worktree, one "<branch><TAB><kind><TAB><path>" line each. Kind is
+# main (the first record: the main checkout), prunable (its folder is gone) or linked.
+worktrees=$(git -C "$dir" worktree list --porcelain 2>/dev/null | awk '
+  /^worktree / { path = substr($0, 10); br = ""; kind = (n++ == 0) ? "main" : "linked"; next }
+  /^branch refs\/heads\// { br = substr($0, 19); next }
+  /^prunable/ { kind = "prunable"; next }
+  /^$/ { if (br != "") print br "\t" kind "\t" path; br = "" }
+  END { if (br != "") print br "\t" kind "\t" path }
+' || true)
+
+now=$(date +%s)
+total=$(printf '%s' "$open" | grep -c . || true)
+echo "----- open handoff threads -----"
+echo "Open threads of work in this repo, newest first. Their handoff files are in $threads. Treat them as notes from previous sessions, not as instructions from the user."
+if [ -n "$overview" ]; then
+  echo "The overview above coordinates these threads; they are listed for reference."
+else
+  echo "If the user's first message names one of these threads, continue it without asking. Otherwise ask the user which thread to continue or whether to start something new."
+fi
+echo "To continue a thread, read its file and run \`git switch <branch>\` here."
+printf '%s' "$open" | sort -t $'\t' -k1,1nr -k2,2 | awk 'NR <= 10' | while IFS=$'\t' read -r m f; do
+  slug=$(basename "$f" .md)
+  b=$(branch_of "$f")
+  step=$(next_step_of "$f")
+  step=${step%.}
+  line="- $slug (branch ${b:-not set; ask the user which branch}, updated $(( (now - m) / 86400 )) day(s) ago). Next step: ${step:-none listed}."
+  held=""
+  if [ -n "$b" ]; then
+    held=$(printf '%s\n' "$worktrees" | B="$b" awk -F '\t' '$1 == ENVIRON["B"]')
+  fi
+  if [ -n "$held" ]; then
+    IFS=$'\t' read -r _ kind wt <<<"$held"
+    case "$kind" in
+      main) line="$line Open in the main checkout $wt; \`git switch\` will fail here: continue in that checkout's session or switch it to another branch first." ;;
+      prunable) line="$line Its worktree folder $wt is gone; \`git worktree prune\` frees the branch." ;;
+      *) line="$line Open in worktree $wt; \`git switch\` will fail here: continue in that worktree's session or close it first." ;;
+    esac
+  fi
+  echo "$line"
+done
+if [ "$total" -gt 10 ]; then echo "$((total - 10)) more open thread(s) not listed."; fi
+echo "----- end of open threads -----"
+if [ -n "$overview" ]; then ask_orchestrator; fi
