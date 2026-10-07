@@ -65,7 +65,7 @@ A skill call is easy to miss in the chat. This inline hook (no script needed) pr
 
 ## Scripts
 
-- [`skill-usage.py`](scripts/skill-usage.py) reads the local transcripts in `~/.claude/projects` and reports, per session, which skills the main session and its subagents invoked, next to the number of code edits and commits. Use it to check whether the skills are actually used: `scripts/skill-usage.py TimeTracker --since 2026-09-30`.
+- [`skill-usage.py`](scripts/skill-usage.py) reads the local transcripts in `~/.claude/projects` and reports, per session, which skills the main session and its subagents invoked, next to the number of code edits and commits. Bash commands that write code files (`>`, `tee`, `sed -i`, Python writes) count as edits. Use it to check whether the skills are actually used: `scripts/skill-usage.py TimeTracker --since 2026-10-05T07:31` (UTC; a plain date works too). Tests: `python3 -m unittest discover -s tests -p 'test_*.py'`.
 
 ## Install
 

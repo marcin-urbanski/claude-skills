@@ -5,6 +5,7 @@ Usage:
     scripts/skill-usage.py                       # all projects, last 14 days
     scripts/skill-usage.py TimeTracker           # projects whose folder name contains "TimeTracker"
     scripts/skill-usage.py TimeTracker --since 2026-09-30
+    scripts/skill-usage.py TimeTracker --since 2026-10-05T07:31   # sessions started at or after 07:31 UTC
 """
 import argparse
 import collections
@@ -18,6 +19,17 @@ PROJECTS = os.path.expanduser("~/.claude/projects")
 WATCHED = ["spec-first", "tdd", "systematic-debugging", "verification-before-completion", "handoff"]
 CODE_FILE = re.compile(r"\.(php|js|jsx|ts|tsx|vue|swift|py|rb|go|rs|css|scss|sql)$")
 GIT_COMMIT = re.compile(r"(^|&&|;|\n)\s*git commit\b")
+# Heuristic over the raw command string, not a shell parser: a code path counts when it is the target of
+# `>`/`>>` (not `2>`, `>&2`, `->` or `=>`), an argument of `tee` or `sed -i`, or a Python open(path, "w"/"a"/"x")
+# or Path(path).write_text/write_bytes with a literal path. `sed -i` arguments run past `;` on purpose, for
+# scripts like `s/a/b/;s/c/d/`; a `|` or `&` inside a sed script can hide the path.
+BASH_WRITES = [
+    re.compile(r"(?<![0-9>=-])>>?\s*([^\s;|&<>]+)"),
+    re.compile(r"\btee\b([^\n;|&]*)"),
+    re.compile(r"\bsed[ \t]+(?:[^\s;|&]+[ \t]+)*?-i\S*([^\n|&]*)"),
+    re.compile(r"\bopen\(\s*(['\"][^'\"]+['\"])\s*,\s*(?:mode\s*=\s*)?['\"][^'\"]*[wax]"),
+    re.compile(r"\bPath\(\s*(['\"][^'\"]+['\"])\s*\)\.write_(?:text|bytes)\("),
+]
 
 
 def tool_uses(path):
@@ -33,6 +45,23 @@ def tool_uses(path):
             for block in content:
                 if isinstance(block, dict) and block.get("type") == "tool_use":
                     yield block.get("name"), block.get("input") or {}
+
+
+def bash_writes_code(command):
+    """True when a Bash command writes at least one file with a code extension."""
+    return any(CODE_FILE.search(arg.strip("'\";"))
+               for pattern in BASH_WRITES for m in pattern.finditer(command) for arg in m.group(1).split())
+
+
+def since_arg(value):
+    """Validate --since and normalise it to YYYY-MM-DD or YYYY-MM-DDTHH:MM, comparable with UTC timestamps."""
+    value = value.replace(" ", "T")
+    for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M"):
+        try:
+            return datetime.datetime.strptime(value, fmt).strftime(fmt)
+        except ValueError:
+            pass
+    raise argparse.ArgumentTypeError(f"expected YYYY-MM-DD or YYYY-MM-DDTHH:MM (UTC), got {value!r}")
 
 
 def first_timestamp(path):
@@ -68,15 +97,18 @@ def scan_session(main_file):
                 skills.add(inp.get("skill", "?").split(":")[-1])
             elif name in ("Edit", "Write", "MultiEdit") and CODE_FILE.search(inp.get("file_path", "")):
                 s["code_edits"] += 1
-            elif name == "Bash" and GIT_COMMIT.search(inp.get("command", "")):
-                s["commits"] += 1
+            elif name == "Bash":
+                command = inp.get("command", "")
+                s["code_edits"] += bash_writes_code(command)
+                s["commits"] += bool(GIT_COMMIT.search(command))
     return s
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("project", nargs="?", default="", help="substring of the project folder name")
-    parser.add_argument("--since", help="YYYY-MM-DD (default: 14 days ago)")
+    parser.add_argument("--since", type=since_arg,
+                        help="UTC start: YYYY-MM-DD or YYYY-MM-DDTHH:MM (default: 14 days ago)")
     args = parser.parse_args()
     since = args.since or (datetime.date.today() - datetime.timedelta(days=14)).isoformat()
 
@@ -86,7 +118,7 @@ def main():
             continue
         for main_file in glob.glob(os.path.join(PROJECTS, project, "*.jsonl")):
             started = first_timestamp(main_file)
-            if not started or started[:10] < since:
+            if not started or started[:len(since)] < since:
                 continue
             name = project.replace("-Users-" + os.environ.get("USER", "") + "-", "")
             rows.append((started, name, os.path.basename(main_file)[:8], scan_session(main_file)))
@@ -112,7 +144,7 @@ def main():
     by_type = ", ".join(f"{name} {n}" for name, n in agent_types.most_common()) or "none"
     print(f"\nSubagents run in those sessions: {sum(s['subagents'] for s in worked)} ({by_type}).")
     print("Skills preloaded by an agent definition (implementer: tdd, verification-before-completion) are not Skill calls and are not counted above.")
-    print("Edits counts Edit/Write calls on code files only; code written through Bash (sed, heredocs) is not counted.")
+    print("Edits counts Edit/Write calls on code files plus Bash commands that write one (>, tee, sed -i, Python open/write_text), one per command.")
 
 
 if __name__ == "__main__":
