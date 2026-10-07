@@ -7,7 +7,7 @@ description: Write or update this thread's handoff file in docs/handoffs/ in the
 
 Write the state of the current work to this thread's handoff file, so a fresh session can pick it up without re-reading this conversation. Then give the user a prompt to paste into that session.
 
-A **thread** is one line of work with a goal (for example "best score"); it may span several branches, one per PR of a plan. Each thread has one file, `docs/handoffs/<slug>.md`, in the repo's **main checkout**: `dirname "$(git rev-parse --path-format=absolute --git-common-dir)"`, the same folder from every worktree of the repo. Never write a handoff inside a linked worktree: it is deleted with the worktree. Not a git repo: use `docs/handoffs/<slug>.md` in the current folder.
+A **thread** is one line of work with a goal (for example "best score"); it may span several branches, one per PR of a plan. Each thread has one file, `docs/handoffs/<slug>.md`, in the repo's **main checkout**, the same folder from every worktree of the repo. The main checkout is `git rev-parse --show-toplevel` when run there (its git dir is the common dir); from a linked worktree, `git --git-dir="$(git rev-parse --path-format=absolute --git-common-dir)" rev-parse --show-toplevel` if `git --git-dir=<that common dir> config core.worktree` prints a value (submodules), otherwise the parent of the common `.git` dir. If that common dir is not named `.git` (a linked worktree of a `--separate-git-dir` repo), there is no main checkout to use: tell the user the handoff cannot be shared across worktrees and ask where to write it. Never write a handoff inside a linked worktree: it is deleted with the worktree. Not a git repo: use `docs/handoffs/<slug>.md` in the current folder.
 
 ## Rules
 

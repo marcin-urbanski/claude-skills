@@ -768,6 +768,138 @@ test_legacy_done_note_before_list() {
   assert_before "Note: docs/handoff.md" "$LIST_START"
 }
 
+# new_submodule_fixture: superproject $super (on main) with submodules $sub and $sub2 (both on main),
+# cloned from $base/lib and $base/lib2. Thread folders: $super_threads, $sub_threads.
+new_submodule_fixture() {
+  base=$(cd "$(mktemp -d "$TMP/case.XXXXXX")" && pwd -P)
+  super="$base/super"
+  sub="$super/libsub"
+  sub2="$super/libsub2"
+  local lib
+  for lib in lib lib2; do
+    git init -q -b main "$base/$lib"
+    git -C "$base/$lib" commit -q --allow-empty -m init
+  done
+  git init -q -b main "$super"
+  git -C "$super" commit -q --allow-empty -m init
+  git -c protocol.file.allow=always -C "$super" submodule add -q "$base/lib" libsub
+  git -c protocol.file.allow=always -C "$super" submodule add -q "$base/lib2" libsub2
+  super_threads="$super/docs/handoffs"
+  sub_threads="$sub/docs/handoffs"
+}
+
+test_submodule_loads_thread_from_its_own_checkout() {
+  new_submodule_fixture
+  git -C "$sub" switch -q -c feature/sub
+  threads="$sub_threads"
+  write_thread s-thing in-progress feature/sub "MARKER-SUB"
+  run_hook "$sub"
+  assert_exit_0
+  assert_contains "MARKER-SUB"
+  assert_contains "----- $sub_threads/s-thing.md -----"
+}
+
+test_submodule_thread_not_loaded_in_sibling_submodule_on_same_branch() {
+  new_submodule_fixture
+  threads="$sub_threads"
+  write_thread s-thing in-progress main "MARKER-SUB"
+  run_hook "$sub2"
+  assert_exit_0
+  assert_empty
+  run_hook "$sub"
+  assert_contains "MARKER-SUB"
+}
+
+test_submodule_lists_only_its_own_threads() {
+  new_submodule_fixture
+  threads="$super_threads"
+  write_thread super-thing in-progress feature/super "STEP-SUPER"
+  threads="$sub_threads"
+  write_thread sub-thing in-progress feature/sub "STEP-SUB"
+  run_hook "$sub"
+  assert_exit_0
+  assert_contains "Their handoff files are in $sub_threads."
+  assert_contains "- sub-thing "
+  assert_not_contains "super-thing"
+}
+
+test_superproject_lists_only_its_own_threads() {
+  new_submodule_fixture
+  threads="$super_threads"
+  write_thread super-thing in-progress feature/super "STEP-SUPER"
+  threads="$sub_threads"
+  write_thread sub-thing in-progress feature/sub "STEP-SUB"
+  run_hook "$super"
+  assert_exit_0
+  assert_contains "- super-thing "
+  assert_not_contains "sub-thing"
+}
+
+test_submodule_worktree_loads_thread_from_submodule_checkout() {
+  new_submodule_fixture
+  git -C "$sub" worktree add -q -b feature/w "$base/sub-wt"
+  threads="$sub_threads"
+  write_thread w-thing in-progress feature/w "MARKER-W"
+  run_hook "$base/sub-wt"
+  assert_exit_0
+  assert_contains "MARKER-W"
+  assert_contains "----- $sub_threads/w-thing.md -----"
+}
+
+test_submodule_worktree_with_sparse_checkout_loads_thread_from_submodule_checkout() {
+  new_submodule_fixture
+  git -C "$sub" worktree add -q -b feature/w "$base/sub-wt"
+  # Turns on extensions.worktreeConfig, which moves core.worktree into config.worktree.
+  git -C "$base/sub-wt" sparse-checkout set --no-cone '/*'
+  threads="$sub_threads"
+  write_thread w-thing in-progress feature/w "MARKER-W"
+  run_hook "$base/sub-wt"
+  assert_exit_0
+  assert_contains "MARKER-W"
+  assert_contains "----- $sub_threads/w-thing.md -----"
+}
+
+test_submodule_worktree_names_submodule_checkout_that_holds_the_branch() {
+  new_submodule_fixture
+  git -C "$sub" worktree add -q -b feature/w "$base/sub-wt"
+  threads="$sub_threads"
+  write_thread m-thing in-progress main "STEP-M"
+  run_hook "$base/sub-wt"
+  assert_exit_0
+  assert_line "- m-thing " "Open in the main checkout $sub;"
+  assert_line_lacks "- m-thing " ".git/modules"
+}
+
+# new_separate_git_dir_fixture: $repo (on main) whose git dir is $base/repo.git.
+new_separate_git_dir_fixture() {
+  base=$(cd "$(mktemp -d "$TMP/case.XXXXXX")" && pwd -P)
+  repo="$base/repo"
+  git init -q -b main --separate-git-dir "$base/repo.git" "$repo"
+  git -C "$repo" commit -q --allow-empty -m init
+  threads="$repo/docs/handoffs"
+}
+
+test_separate_git_dir_loads_thread_in_main_checkout() {
+  new_separate_git_dir_fixture
+  write_thread r-thing in-progress main "MARKER-R"
+  run_hook "$repo"
+  assert_exit_0
+  assert_contains "MARKER-R"
+  assert_contains "----- $threads/r-thing.md -----"
+}
+
+test_separate_git_dir_linked_worktree_is_quiet() {
+  new_separate_git_dir_fixture
+  git -C "$repo" worktree add -q -b feature/x "$base/repo-wt"
+  write_thread r-thing in-progress feature/x "MARKER-R"
+  # The parent of the external git dir is outside the repo: never read from there.
+  threads="$base/docs/handoffs"
+  write_thread outside in-progress feature/x "MARKER-OUTSIDE"
+  run_hook "$base/repo-wt"
+  assert_exit_0
+  assert_empty
+}
+
 for t in $(declare -F | awk '{print $3}' | grep '^test_'); do
   run_test "$t"
 done

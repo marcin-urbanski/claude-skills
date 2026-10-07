@@ -73,11 +73,29 @@ next_step_of() {
   ' "$1" || true
 }
 
+# main_checkout <dir> <git dir> <common dir>: the repo's main working tree, empty if unknown.
+main_checkout() {
+  if [ "$2" = "$3" ]; then
+    # This is the main checkout (normal repo, submodule or --separate-git-dir).
+    git -C "$1" rev-parse --show-toplevel 2>/dev/null || true
+  elif [ -n "$(git --git-dir="$3" config core.worktree 2>/dev/null || true)" ]; then
+    # Linked worktree of a submodule: the common dir in <super>/.git/modules names its working tree
+    # (in config, or in config.worktree once extensions.worktreeConfig is on).
+    git --git-dir="$3" rev-parse --show-toplevel 2>/dev/null || true
+  elif [ "$(basename "$3")" = ".git" ]; then
+    dirname "$3"
+  fi
+  # Otherwise a linked worktree of a --separate-git-dir repo: its main checkout is not
+  # recorded where we can find it. Out of scope: no thread files.
+}
+
 # Thread files sit in the main checkout, found through the git common dir. Not a git repo: none.
 threads=""
 branch=""
+main_dir=""
 if common=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
-  threads="$(dirname "$common")/docs/handoffs"
+  main_dir=$(main_checkout "$dir" "$(git -C "$dir" rev-parse --path-format=absolute --git-dir 2>/dev/null || true)" "$common")
+  if [ -n "$main_dir" ]; then threads="$main_dir/docs/handoffs"; fi
   branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
 fi
 
@@ -160,7 +178,8 @@ if [ -n "$said" ]; then echo; fi
 
 # No thread matches this branch: list the open ones so the user can pick one.
 # Branches checked out in a worktree, one "<branch><TAB><kind><TAB><path>" line each. Kind is
-# main (the first record: the main checkout), prunable (its folder is gone) or linked.
+# main (the first record: the main checkout), prunable (its folder is gone) or linked. A main
+# record's path is the git dir in a submodule, so the list names $main_dir instead.
 worktrees=$(git -C "$dir" worktree list --porcelain 2>/dev/null | awk '
   /^worktree / { path = substr($0, 10); br = ""; kind = (n++ == 0) ? "main" : "linked"; next }
   /^branch refs\/heads\// { br = substr($0, 19); next }
@@ -192,7 +211,7 @@ printf '%s' "$open" | sort -t $'\t' -k1,1nr -k2,2 | awk 'NR <= 10' | while IFS=$
   if [ -n "$held" ]; then
     IFS=$'\t' read -r _ kind wt <<<"$held"
     case "$kind" in
-      main) line="$line Open in the main checkout $wt; \`git switch\` will fail here: continue in that checkout's session or switch it to another branch first." ;;
+      main) line="$line Open in the main checkout $main_dir; \`git switch\` will fail here: continue in that checkout's session or switch it to another branch first." ;;
       prunable) line="$line Its worktree folder $wt is gone; \`git worktree prune\` frees the branch." ;;
       *) line="$line Open in worktree $wt; \`git switch\` will fail here: continue in that worktree's session or close it first." ;;
     esac
