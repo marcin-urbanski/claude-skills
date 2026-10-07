@@ -8,9 +8,9 @@ set -euo pipefail
 
 dir="${CLAUDE_PROJECT_DIR:-$PWD}"
 
-# status_of <path>: the Status: value in lower case.
+# status_of <path>: the Status: value, trimmed, in lower case.
 status_of() {
-  grep -m1 -i '^Status:' "$1" | sed 's/^[Ss]tatus:[[:space:]]*//' | tr '[:upper:]' '[:lower:]' || true
+  grep -m1 -i '^Status:' "$1" | sed 's/^[Ss]tatus:[[:space:]]*//; s/[[:space:]]*$//' | tr '[:upper:]' '[:lower:]' || true
 }
 
 # mtime_of <path>: modification time in epoch seconds (macOS stat first, then GNU stat).
@@ -67,7 +67,8 @@ if [ -n "$branch" ] && [ -d "$threads" ]; then
   done
 fi
 if [ -n "$match" ]; then
-  load_file "$match" "docs/handoffs/$(basename "$match")"
+  # Absolute path: in a linked worktree a relative docs/handoffs/ would point inside the worktree.
+  load_file "$match" "$match"
   exit 0
 fi
 
