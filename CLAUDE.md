@@ -1,6 +1,6 @@
 # claude-skills
 
-This repo is the source of truth for my Claude skills (`handoff`, `spec-first`, `design-check`, `tdd`, `systematic-debugging`, `verification-before-completion`, `ux-principles`), the subagents `spec-first` delegates to (`implementer`, `reviewer`) and the `handoff` hooks (`handoff-load.sh`, `handoff-nudge.sh`). Files in this repo (skills, README, commits) are written in English.
+This repo is the source of truth for my Claude skills (`handoff`, `spec-first`, `design-check`, `tdd`, `systematic-debugging`, `verification-before-completion`, `ux-principles`, `pr`, `retro`), the subagents `spec-first` delegates to (`implementer`, `reviewer`) and the `handoff` hooks (`handoff-load.sh`, `handoff-nudge.sh`). Files in this repo (skills, README, commits) are written in English.
 
 ## How the repo is wired to Claude
 
