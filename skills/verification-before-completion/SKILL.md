@@ -24,6 +24,7 @@ Adapted from obra/superpowers `verification-before-completion` (MIT).
 | Build works | build command exit 0 | lint passing |
 | Requirements met | each acceptance criterion checked one by one | tests passing |
 | Subagent finished | `git diff` and test output checked by you | the subagent's report |
+| UI looks right | a screenshot of the changed screen with realistic data, read by you, plus the app's runtime warnings (the project's screenshot command; with none, report the UI as unverified and propose one) | the build passing, layout arithmetic from code, "the user will check" |
 
 No linter, static analysis or build step in the project: say so in the report in place of that evidence. Do not install one.
 
