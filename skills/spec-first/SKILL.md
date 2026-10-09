@@ -88,4 +88,4 @@ Use `handoff` between sessions on epics.
 1. `verification-before-completion`: full test suite, linters/static analysis the project uses, build if there is one. Read the output.
 2. Independent review of the whole branch: dispatch one `reviewer` subagent with `reviewer-prompt.md` against `main...HEAD`. For a fix, the self-review checklist is enough.
 3. Walk through the acceptance criteria one by one and say how each is met (test name or manual check).
-4. Push and open the PR with `gh pr create`: summary, acceptance criteria with status, reuse decisions, security notes, anything the reviewer flagged that you did not fix. Do not merge.
+4. Push and open the PR with `gh pr create`, writing the body with the `pr` skill: its optional sections carry the acceptance criteria with status, reuse decisions, security notes and anything the reviewer flagged that you did not fix. Do not merge.
