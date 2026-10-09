@@ -56,13 +56,13 @@ Then wait for approval. After approval, give a numbered task list (each task sma
 
 Follow the project's CLAUDE.md for locations if it names others.
 
-**Coding standards.** An epic in a repository without `CODING_STANDARDS.md`, a new project included, starts one. Propose it in the spec under **Decisions needed** (default: yes), with its rules in a line each so the user sees what they approve: only the Core section from `coding-standards-template.md` in this folder, 5 to 7 rules taken from the stack's candidates and from the risks this spec names, each checked with a grep against the code there is. After approval, write the file and add the template's pointer line to the project's `CLAUDE.md`. From evidence stays empty until review finds the same problem twice.
+**Coding standards.** An epic in a repository without `CODING_STANDARDS.md`, a new project included, starts one. Propose it in the spec under **Decisions needed** (default: yes), with its Core rules in a line each so the user sees what they approve, chosen and checked against the code as `coding-standards-template.md` in this folder says. After approval, write the file from the template's skeleton and add its pointer line to the project's `CLAUDE.md`.
 
 ## 5. Build
 
 For a fix or feature, create the branch first (per global git rules); an epic already has it from step 4. Then, per task:
 
-**Default (fix, feature):** do the task in this session with `tdd`, then a self-review against `reviewer-checklist.md` in this folder and the project's `CODING_STANDARDS.md`, if it has one: reuse, security, best practices, spec compliance. Fix what you find. Commit with a conventional message. Next task.
+**Default (fix, feature):** do the task in this session with `tdd`, then a self-review against `reviewer-checklist.md` in this folder and the project's `CODING_STANDARDS.md` and `CONTRIBUTING.md`, whichever exist: reuse, security, best practices, spec compliance. Fix what you find. Commit with a conventional message. Next task.
 
 **Epic:** for each task, dispatch one `implementer` subagent and then one fresh `reviewer` subagent. Both are installed in `~/.claude/agents/` (from the claude-skills repo): the implementer starts with `tdd` and `verification-before-completion` loaded and cannot spawn subagents, the reviewer is read-only.
 

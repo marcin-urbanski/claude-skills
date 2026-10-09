@@ -1,15 +1,15 @@
 # CODING_STANDARDS.md template
 
-`spec-first` uses this to start a project's `CODING_STANDARDS.md`; `retro` uses its rule format to add, sharpen and remove rules later.
+`spec-first` uses this to start a project's `CODING_STANDARDS.md`; `retro` uses it to add, sharpen and remove rules later. This file is the one place that sets the format, the limit and what a new rule replaces.
 
 ## How the file works
 
 - The `reviewer` checks every rule against every diff, and the `implementer` reads the file before writing code. Every rule costs on every task, so the file holds at most 15.
-- **Core**: the few things most expensive to get wrong in this product, chosen when the project starts. **From evidence**: added only when review found the same problem at least twice, or the user corrected it.
+- **Core**: the few things most expensive to get wrong in this product, chosen when the project starts. **From evidence**: added only when review found the same problem at least twice (each human or reviewer comment is one finding, earlier PRs included), or the user asked for the rule.
 - A rule is checkable on a diff: it names the code shape a reviewer can point at (an API, a type, a folder, a call). It states the target behaviour first, then the exceptions the code relies on, and ends with *Why:* (one real consequence) and the number of findings so far.
 - Stays out of the file:
   - anything a compiler, linter, test or hook can enforce: add that check instead;
-  - what `skills/spec-first/reviewer-checklist.md` already covers (security, scope, test quality, code smells);
+  - what `reviewer-checklist.md` in this folder already covers (security, scope, test quality, code smells), unless the rule names this framework's or project's own form of an item that the general wording lets through (a WordPress `permission_callback`, the one way this app shows errors);
   - what `CLAUDE.md` or the framework guidelines it loads already say, such as the Laravel Boost block;
   - where things live: that is a navigation line in `CLAUDE.md`.
 - Before a rule goes in, grep the code for what it requires or forbids. If existing code breaks it on purpose, the rule is too wide: narrow it or name the exception. An accidental violation becomes a task when the current work touches that code, and a follow-up issue otherwise.
@@ -44,7 +44,7 @@ Add one line to the project's `CLAUDE.md`, so a session that writes code without
 
 ## Core candidates
 
-Pick 3 to 5 that fit the project and rewrite them with its own names. Then add the product's own risk from the spec: what costs the most when it is wrong (money, time, another user's data, a delete, a message sent twice). Core holds 5 to 7 rules in total.
+Pick 3 to 5 that fit the project and rewrite them with its own names. Then add the product's own risk from the spec: what costs the most when it is wrong (money, time, another user's data, a delete, a message sent twice). Core holds 5 to 7 rules in total. For a stack not listed here, write all of them from the spec's risks in the same format.
 
 ### Swift / SwiftUI
 
@@ -58,9 +58,9 @@ From TimeTracker, where each of these came up in review several times.
 
 ### Laravel / PHP
 
-Laravel Boost already puts the framework's conventions in `CLAUDE.md` (Eloquent before `DB::`, Form Requests, eager loading, `$fillable`, `casts()`, queued jobs, `config()` over `env()`, Pest and factories), and its `search-docs` answers how the installed version behaves. Do not repeat either here; these candidates cover what Boost does not.
+When the project has Laravel Boost, it already puts the framework's conventions in `CLAUDE.md` (Eloquent before `DB::`, Form Requests, eager loading, `$fillable`, `casts()`, queued jobs, `config()` over `env()`, Pest and factories), and its `search-docs` answers how the installed version behaves. Do not repeat either here; these candidates cover what Boost does not.
 
-- **Money is integer minor units.** Amounts are stored and computed as integer cents (an integer column, an `int` cast or the project's money object); a percentage is applied once, through one named rounding helper. Never `float` or `decimal` arithmetic in PHP. *Why:* float rounding makes a total one cent off the invoice.
+- **Money is integer minor units.** Amounts are stored and computed as integer cents (an integer column, an `int` cast or the project's money object); a percentage is applied once, through one named rounding helper. Never `float`, and never arithmetic on a decimal column's string value. *Why:* float rounding makes a total one cent off the invoice.
 - **Time is stored in UTC and grouped in the business's time zone.** Comparisons run in UTC; day and month boundaries are computed in the zone the business or user works in. Tests freeze time (`$this->travelTo()`) and include a case across local midnight. *Why:* an entry at 00:30 lands in the previous month's report.
 - **Writes that span rows are atomic.** A change that writes more than one row or table runs in `DB::transaction()`, and mail, HTTP calls and dispatched jobs that depend on it run after commit (`afterCommit()`). *Why:* a failure half-way leaves an invoice without its lines, or emails a rolled-back order.
 - **Jobs and webhooks can run twice.** A queued job or webhook handler keys its work on the external id (a unique index with `upsert` or `firstOrCreate`), so a retry changes nothing. *Why:* the payment provider retries a webhook and the customer is credited twice.
@@ -78,8 +78,8 @@ PHPCS with the `WordPress-Extra` standard enforces escaping, nonces, input sanit
 
 ### Next.js (App Router, TypeScript)
 
-- **Server code stays on the server.** Database access, secrets and SDK clients live in modules that `import 'server-only'`; only `NEXT_PUBLIC_` variables reach the browser; `'use client'` goes on the smallest leaf component that needs it. *Why:* one client import pulls a secret into the browser bundle.
-- **Every server action and route handler is a public endpoint.** It parses its input with the project's schema library, checks the session and that the user owns the object, and trusts nothing from the page that calls it. *Why:* anyone can call a server action directly with any arguments.
+- **Server code stays on the server.** Database access, secrets and SDK clients live in modules that `import 'server-only'`; no secret goes in a `NEXT_PUBLIC_` variable; a client component receives only the fields it renders, and `'use client'` goes on the smallest leaf that needs it. *Why:* props passed to a client component are sent to the browser, and a server module imported by the client fails at runtime instead of at build time.
+- **Every server action and route handler is a public endpoint.** It parses its arguments, form data, `searchParams` and cookies with the project's schema library, then checks the session and that the user owns the object, trusting nothing from the page that calls it. *Why:* anyone can call a server action directly with any arguments.
 - **Freshness is explicit.** Every data read states how fresh it must be (`cache`, `revalidate`, `dynamic` or `'use cache'` with tags, as the installed version supports), and every write revalidates the paths or tags it changes. Check the version's defaults in the docs. *Why:* defaults changed between versions, and a stale page shows an old price after an edit.
-- **Outside data is parsed at the boundary.** API responses, `searchParams`, cookies, form data and JSON columns are parsed with a schema into a type; no `as` casts or `any` on them. *Why:* a cast hides a field that is missing at runtime until a user hits it.
+- **Independent reads start together.** A server component or action that needs several independent reads starts them at once (`Promise.all`, or separate components under `Suspense`), not one `await` after another. *Why:* each sequential `await` adds a full round trip to the page load.
 - **Logic lives in plain modules, with tests.** Rules about what is counted, filtered or stored are plain TypeScript functions with unit tests; components render and call them. *Why:* logic inside a component is tested only through the UI, if at all.
