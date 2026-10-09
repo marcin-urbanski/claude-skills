@@ -67,6 +67,8 @@ For a fix or feature, create the branch first (per global git rules); an epic al
 - Implementer prompt: the task text from the plan, global constraints and the reuse list. The agent's own instructions cover TDD, verification, the commit and the report.
 - Reviewer prompt: `reviewer-prompt.md` in this folder, filled in with the task, constraints and the commit range.
 - Critical or Important findings go back to the implementer; re-review only the fix. Minor findings are listed for the user.
+- Every code change goes through an implementer and a reviewer, including fixes for findings and anything after the whole-branch review. You plan, dispatch and check; you write no production code.
+- A product or spec question an agent raises (behaviour, copy, an existing test's assertion) goes to the user, not to another agent. Record the answer in the spec.
 - Do not trust any report: check `git diff` and the test output yourself before moving on.
 
 Tell the user where you are, so they never meet a bare task number. Write it in the language of the conversation, labels included (the examples below are English only for illustration):
@@ -86,6 +88,7 @@ Use `handoff` between sessions on epics.
 ## 6. Finish (every size)
 
 1. `verification-before-completion`: full test suite, linters/static analysis the project uses, build if there is one. Read the output.
-2. Independent review of the whole branch: dispatch one `reviewer` subagent with `reviewer-prompt.md` against `main...HEAD`. For a fix, the self-review checklist is enough.
-3. Walk through the acceptance criteria one by one and say how each is met (test name or manual check).
-4. Push and open the PR with `gh pr create`, writing the body with the `pr` skill. Do not merge.
+2. If the diff changes UI and the project has an export in `docs/design`, run `design-check`.
+3. Independent review of the whole branch: dispatch one `reviewer` subagent with `reviewer-prompt.md` against `main...HEAD`. For a fix, the self-review checklist is enough.
+4. Walk through the acceptance criteria one by one and say how each is met (test name or manual check).
+5. Push and open the PR with `gh pr create`, writing the body with the `pr` skill. Do not merge.
