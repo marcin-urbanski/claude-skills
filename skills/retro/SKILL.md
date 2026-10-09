@@ -50,7 +50,7 @@ The goal is that a human never writes the same review comment twice.
 | A skill or agent did the wrong thing, or skipped a step | Skill fix | The skill or agent file in claude-skills |
 | A crucial fact was out of reach (server logs, a third-party service, test output) | Information access | Write logs to a file, add read-only access, or a script that fetches it |
 | An expensive tool call (huge output, many retries of the same call) | Tool economy | A narrower command, a script, or a flag that trims output |
-| A rule in `CLAUDE.md` that implementation does not need | Move it | To a check or `reviewer-checklist.md`; to `CODING_STANDARDS.md` only when it is a project judgement call a diff shows. Keep `CLAUDE.md` for navigation pointers |
+| A rule in `CLAUDE.md` that only matters when code is written or reviewed | Move it | To a check; to `CODING_STANDARDS.md` for a judgement call in this project; to `reviewer-checklist.md` only when it applies to every project. Keep `CLAUDE.md` for navigation pointers |
 | A steering line the model already obeys without being told | No-op | Delete the sentence |
 
 Prefer a check over prose: a failing check holds every time, a sentence holds when the model notices it. Write prose only for genuine judgement calls.

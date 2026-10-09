@@ -23,4 +23,4 @@ Stay inside the task. If you notice a problem outside it (a bug, a gap, a slow q
 - RED and GREEN output for each behaviour (the failing assertion and the passing run, shortened).
 - Full-suite, lint and build commands with their result (for example "212 passed, 0 failed").
 - Commit SHA.
-- Anything unclear, any deviation from the task or from a `CODING_STANDARDS.md` rule (with why), and problems found outside the task.
+- Anything unclear, any deviation from the task or from a rule in `CODING_STANDARDS.md` or `CONTRIBUTING.md` (with why), and problems found outside the task.

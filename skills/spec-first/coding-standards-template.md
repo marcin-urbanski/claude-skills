@@ -9,7 +9,7 @@
 - A rule is checkable on a diff: it names the code shape a reviewer can point at (an API, a type, a folder, a call). It states the target behaviour first, then the exceptions the code relies on, and ends with *Why:* (one real consequence) and the number of findings so far.
 - Stays out of the file:
   - anything a compiler, linter, test or hook can enforce: add that check instead;
-  - what `reviewer-checklist.md` in this folder already covers (security, scope, test quality, code smells), unless the rule names this framework's or project's own form of an item that the general wording lets through (a WordPress `permission_callback`, the one way this app shows errors);
+  - what `reviewer-checklist.md` in this folder already covers (security, scope, test quality, code smells), unless the rule names a concrete API or anti-pattern of this framework or project that the checklist does not name (`__return_true` in a WordPress `permission_callback`, the one way this app shows errors);
   - what `CLAUDE.md` or the framework guidelines it loads already say, such as the Laravel Boost block;
   - where things live: that is a navigation line in `CLAUDE.md`.
 - Before a rule goes in, grep the code for what it requires or forbids. If existing code breaks it on purpose, the rule is too wide: narrow it or name the exception. An accidental violation becomes a task when the current work touches that code, and a follow-up issue otherwise.
@@ -64,7 +64,7 @@ When the project has Laravel Boost, it already puts the framework's conventions 
 - **Time is stored in UTC and grouped in the business's time zone.** Comparisons run in UTC; day and month boundaries are computed in the zone the business or user works in. Tests freeze time (`$this->travelTo()`) and include a case across local midnight. *Why:* an entry at 00:30 lands in the previous month's report.
 - **Writes that span rows are atomic.** A change that writes more than one row or table runs in `DB::transaction()`, and mail, HTTP calls and dispatched jobs that depend on it run after commit (`afterCommit()`). *Why:* a failure half-way leaves an invoice without its lines, or emails a rolled-back order.
 - **Jobs and webhooks can run twice.** A queued job or webhook handler keys its work on the external id (a unique index with `upsert` or `firstOrCreate`), so a retry changes nothing. *Why:* the payment provider retries a webhook and the customer is credited twice.
-- **Each outside service has one client.** One class wraps each external API (`Http::` or the vendor's SDK), with a timeout, retries and errors mapped to the project's exceptions. Tests fake that class or use `Http::fake()`, and the base test case calls `Http::preventStrayRequests()`. *Why:* a call without a timeout blocks a queue worker; an unfaked test call reaches the real service.
+- **Each outside service has one client.** One class wraps each external API (`Http::` or the vendor's SDK), with a timeout, retries and errors mapped to the project's exceptions. Tests fake that class or use `Http::fake()`, and the base test case calls `Http::preventStrayRequests()`. *Why:* an unfaked test call reaches the real service and can charge a real card.
 
 ### WordPress (plugins, themes, WooCommerce)
 
@@ -78,7 +78,7 @@ PHPCS with the `WordPress-Extra` standard enforces escaping, nonces, input sanit
 
 ### Next.js (App Router, TypeScript)
 
-- **Server code stays on the server.** Database access, secrets and SDK clients live in modules that `import 'server-only'`; no secret goes in a `NEXT_PUBLIC_` variable; a client component receives only the fields it renders, and `'use client'` goes on the smallest leaf that needs it. *Why:* props passed to a client component are sent to the browser, and a server module imported by the client fails at runtime instead of at build time.
+- **Server code stays on the server.** Database access, secrets and SDK clients live in modules that `import 'server-only'`; no secret goes in a `NEXT_PUBLIC_` variable; a client component receives only the fields it renders, and `'use client'` goes on the smallest leaf that needs it. *Why:* props passed to a client component are sent to the browser, secrets included.
 - **Every server action and route handler is a public endpoint.** It parses its arguments, form data, `searchParams` and cookies with the project's schema library, then checks the session and that the user owns the object, trusting nothing from the page that calls it. *Why:* anyone can call a server action directly with any arguments.
 - **Freshness is explicit.** Every data read states how fresh it must be (`cache`, `revalidate`, `dynamic` or `'use cache'` with tags, as the installed version supports), and every write revalidates the paths or tags it changes. Check the version's defaults in the docs. *Why:* defaults changed between versions, and a stale page shows an old price after an edit.
 - **Independent reads start together.** A server component or action that needs several independent reads starts them at once (`Promise.all`, or separate components under `Suspense`), not one `await` after another. *Why:* each sequential `await` adds a full round trip to the page load.
