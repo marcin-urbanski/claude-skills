@@ -4,15 +4,15 @@ Fill in the brackets and pass as the prompt of the `reviewer` subagent (`~/.clau
 
 ```
 ## What was asked
-[Task text from the plan, or the feature's acceptance criteria]
+[Task text from the plan, the feature's acceptance criteria, or for a fix the user's request and the behaviour it asks for]
 
 Global constraints:
 [Constraints from the spec/plan, or "none"]
 
-Reuse decisions from the spec:
+Reuse decisions (from the spec, or from chat for a fix):
 [What was supposed to be reused or extended]
 
 ## What to review
 Repository: [absolute path]
-Diff: `git diff [BASE]..[HEAD]`
+Diff: `git diff [BASE]...[HEAD]`
 ```

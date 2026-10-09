@@ -45,7 +45,7 @@ Then wait for approval. After approval, give a numbered task list (each task sma
 
 ## 4. Epic: spec and plan files
 
-1. Write the spec to `docs/specs/YYYY-MM-DD-<topic>.md` with the same sections as above, plus data model, integrations, error handling and migration/rollout where relevant. Ask the user to review it; wait for approval. Then create the feature branch from the base branch (per the project's or global git rules). In a worktree on a placeholder branch, such as the desktop app's `cc/<name>`, switch that worktree to it with `git switch -c feature/<name> <base>` instead of committing on the placeholder.
+1. Write the spec to `docs/specs/YYYY-MM-DD-<topic>.md` with the same sections as above, plus data model, integrations, error handling and migration/rollout where relevant. The acceptance criteria range above applies per story; the file has no line limit, but the summary you show in chat keeps to about 40 lines. Ask the user to review it; wait for approval, leaving the spec uncommitted where it is (it is not a code change). Then create the feature branch from the base branch (per the project's or global git rules). In a worktree on a placeholder branch, such as the desktop app's `cc/<name>`, switch that worktree to it with `git switch -c feature/<name> <base>` instead of committing on the placeholder.
 2. Write the plan to `docs/plans/YYYY-MM-DD-<topic>.md`:
    - Header: goal, link to the spec, branch name, global constraints (exact values, formats, security rules every task must respect).
    - Tasks, each with: an **In short** line, files (including every caller of a function or type whose signature or behaviour the task changes, found with `rg`, and what changes for it or why nothing does), what to reuse, acceptance criteria covered, the tests to write first, and a done check (command + expected result).
@@ -91,6 +91,6 @@ Use `handoff` between sessions on epics.
 
 1. If the diff changes UI and the project has an export in `docs/design`, run `design-check`.
 2. `verification-before-completion`: full test suite, linters/static analysis the project uses, build if there is one. Read the output.
-3. Independent review of the whole branch: dispatch one `reviewer` subagent with `reviewer-prompt.md` against `main...HEAD`. For a fix, the self-review checklist is enough.
-4. Walk through the acceptance criteria one by one and say how each is met (test name or manual check).
+3. Independent review of the whole branch, for every size: dispatch one `reviewer` subagent with `reviewer-prompt.md` against `main...HEAD`.
+4. Walk through the acceptance criteria (for a fix, the behaviour the request asks for) one by one and say how each is met (test name or manual check).
 5. Push and open the PR with `gh pr create`, writing the body with the `pr` skill. Do not merge.

@@ -58,7 +58,7 @@ From TimeTracker, where each of these came up in review several times.
 
 ### Laravel / PHP
 
-When the project has Laravel Boost, it already puts the framework's conventions in `CLAUDE.md` (Eloquent before `DB::`, Form Requests, eager loading, `$fillable`, `casts()`, queued jobs, `config()` over `env()`, Pest and factories), and its `search-docs` answers how the installed version behaves. Do not repeat either here; these candidates cover what Boost does not.
+When the project has Laravel Boost, it already puts the framework's conventions in `CLAUDE.md` (Eloquent before `DB::` for queries, though `DB::transaction()` is fine; Form Requests, eager loading, `$fillable`, `casts()`, queued jobs, `config()` over `env()`, Pest and factories), and its `search-docs` answers how the installed version behaves. Do not repeat either here; these candidates cover what Boost does not.
 
 - **Money is integer minor units.** Amounts are stored and computed as integer cents (an integer column, an `int` cast or the project's money object); a percentage is applied once, through one named rounding helper. Never `float`, and never arithmetic on a decimal column's string value. *Why:* float rounding makes a total one cent off the invoice.
 - **Time is stored in UTC and grouped in the business's time zone.** Comparisons run in UTC; day and month boundaries are computed in the zone the business or user works in. Tests freeze time (`$this->travelTo()`) and include a case across local midnight. *Why:* an entry at 00:30 lands in the previous month's report.
