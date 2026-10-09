@@ -75,7 +75,7 @@ Clone the repo and link the skills you want into your personal skills folder:
 
 ```bash
 git clone https://github.com/marcin-urbanski/claude-skills.git ~/Developer/claude-skills
-ln -s ~/Developer/claude-skills/skills/handoff ~/.claude/skills/handoff
+ln -sfn ~/Developer/claude-skills/skills/handoff ~/.claude/skills/handoff
 ```
 
 Link the hooks the same way into `~/.claude/hooks/`, and the subagent files into `~/.claude/agents/`. Claude Code follows symlinked skill folders, so `git pull` is enough to update.
