@@ -13,6 +13,8 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 | [systematic-debugging](skills/systematic-debugging/SKILL.md) | Find the root cause before fixing anything. |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md) | Run the tests, linters and build before saying something works. |
 | [ux-principles](skills/ux-principles/SKILL.md) | My UI/UX rulebook: avoiding generic AI-looking design, conversion psychology within honest limits, visual craft, interaction and app patterns, e-commerce product pages and checkout, and native iPhone, iPad and Mac apps. |
+| [pr](skills/pr/SKILL.md) | The format for a pull request body that a human can review fast: a small visual of the change (pseudocode, call tree, Mermaid, a diff of the shape), before-and-after evidence, and a merge danger call (one-way or two-way door, blast radius). `spec-first` uses it when it opens a PR. |
+| [retro](skills/retro/SKILL.md) | `/retro` after a hard session or a PR review: reads a digest of the session transcript (`digest.py`) and the PR's review comments, then proposes, most severe first, the automated check, coding standard, reviewer rule, skill fix or `CLAUDE.md` pointer that stops the same mistake from happening again. Only you can invoke it, and it changes nothing until you pick. |
 
 ## Subagents
 
@@ -21,7 +23,7 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 | Subagent | What it's for |
 |---|---|
 | [implementer](agents/implementer.md) | Builds one task from a plan test-first, verifies, commits, and reports RED/GREEN output. Cannot spawn subagents. |
-| [reviewer](agents/reviewer.md) | Read-only review of a diff for reuse, security, best practices and spec compliance, with a verdict and findings by severity. |
+| [reviewer](agents/reviewer.md) | Read-only review of a diff for reuse, security, the project's own `CODING_STANDARDS.md`, tests that cannot fail, code smells and spec compliance, with a verdict and findings by severity. |
 
 ## Hooks
 
@@ -83,6 +85,8 @@ For claude.ai, zip a skill folder (for example `handoff/` with its `SKILL.md`) a
 ## Credits
 
 `tdd`, `systematic-debugging` and `verification-before-completion` are adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+`pr` and `retro` are adapted from [mattpocock/skills](https://github.com/mattpocock/skills) by Matt Pocock (MIT). The Summary visuals in `pr` come from Dex Horthy's [`show-me`](https://github.com/humanlayer/skills) (MIT), via Matt's skill. The test-smell and code-smell sections of the reviewer checklist follow Matt's `code-review` skill and his talk on the PR bottleneck. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 `ux-principles` builds on uxpeak's [UI/UX Playbook](https://www.uxpeak.com) (free preview) and their video [The UX Psychology Behind Apps People Can't Stop Using](https://www.youtube.com/watch?v=2TlIg3VokY8), rewritten and extended in my own words. Its app-pattern and Apple-platform references are based on Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/), paraphrased as rules.
 
