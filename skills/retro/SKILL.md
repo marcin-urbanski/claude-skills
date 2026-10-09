@@ -25,6 +25,7 @@ The goal is that a human never writes the same review comment twice.
    gh api --paginate repos/{owner}/{repo}/pulls/<n>/comments --jq '.[] | {path, line, body}'
    ```
    Every human review comment is a candidate. It ends as a check, a rule, or a stated decision that it was a one-off.
+   To count earlier findings for a From evidence rule in a repo whose PRs have no review comments, search the fix commits and their PRs: `git log --oneline --grep '^fix'`.
 3. **Read the environment** before proposing anything, so you extend what exists instead of reinventing it:
    - the project's `CLAUDE.md` / `AGENTS.md` and `CODING_STANDARDS.md` (or `CONTRIBUTING.md`);
    - its check commands: `composer.json` / `package.json` scripts, `Makefile`, CI workflows, pre-commit config, `.claude/settings.json` hooks;
