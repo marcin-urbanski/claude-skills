@@ -92,5 +92,5 @@ Use `handoff` between sessions on epics.
 1. If the diff changes UI and the project has an export in `docs/design`, run `design-check`.
 2. `verification-before-completion`: full test suite, linters/static analysis the project uses, build if there is one. Read the output.
 3. Independent review of the whole branch, for every size: dispatch one `reviewer` subagent with `reviewer-prompt.md` against `main...HEAD`.
-4. Walk through the acceptance criteria one by one and say how each is met (test name or manual check).
+4. Walk through the acceptance criteria (for a fix, the behaviour the request asks for) one by one and say how each is met (test name or manual check).
 5. Push and open the PR with `gh pr create`, writing the body with the `pr` skill. Do not merge.
