@@ -18,11 +18,11 @@ The goal is that a human never writes the same review comment twice.
    ```bash
    python3 ~/.claude/skills/retro/digest.py [session-id or path]
    ```
-   With no argument it takes the newest session of the current directory, which is this session. The user may name another one. If this session is already long, suggest running `/retro` from a fresh session on this one's id instead. The digest lists subagents at the end: digest the ones with errors too. Open the raw `.jsonl` only to read a specific moment the digest points at.
+   With no argument it takes this session. The user may name another one. If this session is already long, suggest running `/retro` from a fresh session on this one's id instead. The digest lists subagents at the end: digest the ones with errors too. Open the raw `.jsonl` only to read a specific moment the digest points at.
 2. **Read the PR review**, when the user names a PR or the session opened one:
    ```bash
    gh pr view <n> --comments
-   gh api repos/{owner}/{repo}/pulls/<n>/comments --jq '.[] | {path, line, body}'
+   gh api --paginate repos/{owner}/{repo}/pulls/<n>/comments --jq '.[] | {path, line, body}'
    ```
    Every human review comment is a candidate. It ends as a check, a rule, or a stated decision that it was a one-off.
 3. **Read the environment** before proposing anything, so you extend what exists instead of reinventing it:

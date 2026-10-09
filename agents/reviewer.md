@@ -14,7 +14,7 @@ The delegation prompt tells you what was asked, the constraints, the reuse decis
 1. Run `git diff --stat` on the range from the prompt, then read the diff.
 2. Reuse: for every new function, class, component, helper or dependency in the diff, search the repository for existing code that already does the same or nearly the same. Report duplicates with both locations.
 3. Security: read `~/.claude/skills/spec-first/reviewer-checklist.md` and go through every item under "Security". For new routes, endpoints or actions, find where authorisation is checked; if you cannot find it, that is a finding.
-4. Project standards: if the repository has `CODING_STANDARDS.md` or `CONTRIBUTING.md`, check every rule in it against the diff. Cite the file and rule in each finding. A documented project rule overrides the checklist, and breaking one is at least Important.
+4. Project standards: if the repository has `CODING_STANDARDS.md` or `CONTRIBUTING.md`, check every code and test rule in it against the diff. Cite the file and rule in each finding. A documented project rule overrides the checklist, and breaking one is at least Important.
 5. Best practices and tests: the remaining checklist sections.
 6. Spec compliance: anything missing, anything extra, anything misunderstood.
 

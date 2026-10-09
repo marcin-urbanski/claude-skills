@@ -37,6 +37,8 @@ Write the last three sections only when they have content:
 - **Notes for the reviewer**: reuse decisions, security notes, and review findings that were not fixed, with the reason.
 - **Follow-ups**: links to issues created during the work.
 
+A section another skill requires (such as `design-check`'s `## Design`) goes after Merge danger.
+
 ## Summary visual
 
 Pick the one view that makes the key point clear; occasionally two. Keep only the calls, files, states and boundaries the reviewer needs.

@@ -90,6 +90,11 @@ class DigestTest(unittest.TestCase):
         self.assertIn("Bash: npm test [repeat #3]", out)
         self.assertEqual(out.count("[repeat"), 2)
 
+    def test_a_retry_with_a_new_description_is_a_repeat(self):
+        self.write(assistant(call("Bash", "t1", command="npm test", description="Run tests"),
+                             call("Bash", "t2", command="npm test", description="Run tests again")))
+        self.assertIn("[repeat #2]", retro_digest.digest(self.path))
+
     def test_calls_sharing_only_a_first_line_are_not_repeats(self):
         self.write(assistant(call("Bash", "t1", command="cat >> log.md <<'EOF'\nstep 1\nEOF"),
                              call("Bash", "t2", command="cat >> log.md <<'EOF'\nstep 2\nEOF")))
@@ -110,6 +115,7 @@ class DigestTest(unittest.TestCase):
         self.assertIn("3 tool calls", header)
         self.assertIn("1 errors", header)
         self.assertIn("Bash 2", header)
+        self.assertIn("times in UTC", header)
 
     def test_lists_subagents_with_description_and_counts(self):
         self.write(user("go"))
@@ -141,10 +147,17 @@ class SessionFileTest(unittest.TestCase):
         os.utime(path, (time.time() - age, time.time() - age))
         return path
 
-    def test_defaults_to_newest_session_of_the_working_directory(self):
+    def test_without_a_session_id_defaults_to_newest_session_of_the_working_directory(self):
         self.touch("old.jsonl", age=100)
         newest = self.touch("new.jsonl")
-        self.assertEqual(retro_digest.session_file(None, "/Users/me/Developer/my.app"), newest)
+        with mock.patch.dict(os.environ, {}, clear=True):
+            self.assertEqual(retro_digest.session_file(None, "/Users/me/Developer/my.app"), newest)
+
+    def test_defaults_to_the_running_session_when_its_id_is_set(self):
+        current = self.touch("0cfcc517-run.jsonl", age=100)
+        self.touch("newer-other.jsonl")
+        with mock.patch.dict(os.environ, {"CLAUDE_CODE_SESSION_ID": "0cfcc517-run"}):
+            self.assertEqual(retro_digest.session_file(None, "/a/worktree/elsewhere"), current)
 
     def test_accepts_a_path_or_a_session_id(self):
         path = self.touch("0ec51c34-aaaa.jsonl")

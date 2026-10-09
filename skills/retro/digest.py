@@ -2,7 +2,7 @@
 """Condense a Claude Code session transcript into a short timeline for /retro.
 
 Usage:
-    digest.py                  # newest session of the current directory's project
+    digest.py                  # the running session (CLAUDE_CODE_SESSION_ID), else the cwd's newest
     digest.py <session-id>     # a session from any project in ~/.claude/projects
     digest.py <path.jsonl>     # a transcript file, e.g. a subagent's
 
@@ -97,7 +97,8 @@ def scan(path):
                     name, inp = block.get("name", "?"), block.get("input") or {}
                     tools[name] += 1
                     label = f"{name}({inp['subagent_type']})" if inp.get("subagent_type") else name
-                    key = name + json.dumps(inp, sort_keys=True)
+                    # A retry often rewords the description, so it is not part of what makes a call identical.
+                    key = name + json.dumps({k: v for k, v in inp.items() if k != "description"}, sort_keys=True)
                     seen[key] += 1
                     repeat = f" [repeat #{seen[key]}]" if seen[key] > 1 else ""
                     lines.append(f"[{time}] {label}: {summary(name, inp)}{repeat}")
@@ -108,7 +109,7 @@ def digest(path):
     lines, tools, errors = scan(path)
     by_tool = ", ".join(f"{name} {n}" for name, n in tools.most_common())
     out = [f"# Session {os.path.basename(path)[:-len('.jsonl')]}: {sum(tools.values())} tool calls, "
-           f"{errors} errors ({by_tool or 'no tools'})", ""] + lines
+           f"{errors} errors ({by_tool or 'no tools'}), times in UTC", ""] + lines
     subagents = sorted(glob.glob(os.path.join(path[:-len(".jsonl")], "subagents", "*.jsonl")))
     if subagents:
         out += ["", "## Subagents (digest one by passing its path)"]
@@ -125,9 +126,14 @@ def digest(path):
 
 
 def session_file(arg, cwd):
-    """Resolve a transcript path from a path, a session id, or (no argument) the cwd's newest session."""
+    """Resolve a transcript path from a path, a session id, or (no argument) the running session.
+
+    The running session comes from CLAUDE_CODE_SESSION_ID, because Bash may sit in a worktree whose
+    project folder differs from the session's; without it, the cwd's newest session is the best guess.
+    """
     if arg and os.path.isfile(arg):
         return arg
+    arg = arg or os.environ.get("CLAUDE_CODE_SESSION_ID")
     if arg:
         matches = glob.glob(os.path.join(PROJECTS, "*", f"{arg}*.jsonl"))
     else:

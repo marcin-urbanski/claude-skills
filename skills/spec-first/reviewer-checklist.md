@@ -43,7 +43,6 @@ Used for self-review after each task and by the reviewer subagent. Every finding
 
 ## Code smells (judgement calls)
 Report each as "possible <smell>" with the hunk, never as a hard violation; a project standard that endorses the pattern wins.
-- **Mysterious name**: the name does not say what it does or holds.
 - **Feature envy**: a method that works mostly with another object's data; move it there.
 - **Data clumps / primitive obsession**: the same fields travel together, or a string or number stands in for a domain concept; give it a type.
 - **Repeated switches**: the same `switch` or `if` cascade on the same type in several places.
