@@ -35,5 +35,17 @@ Used for self-review after each task and by the reviewer subagent. Every finding
 
 ## Tests and spec
 - Each acceptance criterion is covered by a test, or the gap is named.
-- Tests assert real behaviour, not mocks; they would fail if the feature broke.
+- Tests assert real behaviour, not mocks; they would fail if the feature broke. Name the production change that would make each new test fail. Tests that lie:
+  - **Tautological**: restates the implementation (`expect(MAX)->toBe(30)`), so it breaks on a rename and passes when the behaviour breaks.
+  - **Structural**: checks how the code is written (file contents, element order in source, private methods) instead of what it does through its public interface.
+  - **Cannot fail**: mocks the very thing under test, or so much around it that no real failure path is left.
 - Nothing was built that the spec did not ask for.
+
+## Code smells (judgement calls)
+Report each as "possible <smell>" with the hunk, never as a hard violation; a project standard that endorses the pattern wins.
+- **Mysterious name**: the name does not say what it does or holds.
+- **Feature envy**: a method that works mostly with another object's data; move it there.
+- **Data clumps / primitive obsession**: the same fields travel together, or a string or number stands in for a domain concept; give it a type.
+- **Repeated switches**: the same `switch` or `if` cascade on the same type in several places.
+- **Shotgun surgery**: one logical change scattered across many files; gather what changes together.
+- **Middle man**: a class or function that only passes calls on.
