@@ -33,7 +33,7 @@ The few things that are most expensive to get wrong in <product>.
 
 ## From evidence
 
-Each rule happened at least twice in review, or the user asked for it.
+Each rule has at least two findings, or the user asked for it.
 ```
 
 Add one line to the project's `CLAUDE.md`, so a session that writes code without the `implementer` finds the file:
@@ -78,10 +78,12 @@ PHPCS with the `WordPress-Extra` standard enforces escaping, nonces, input sanit
 
 ### Next.js (App Router, TypeScript)
 
-`eslint-config-next` and the TypeScript compiler cover the framework's own conventions. A call that is known to break in the installed version is banned with ESLint's `no-restricted-syntax` instead of a rule, such as `router.refresh()`, which a Next 16 production build can drop and leave the router stuck.
+`eslint-config-next` and the TypeScript compiler cover the framework's own conventions. A call that is known to break in the installed version is banned with ESLint's `no-restricted-syntax` instead of a rule, such as `router.refresh()` after a server action, which a Next 16 production build can drop and leave the router stuck.
 
-- **Server code stays on the server.** Database access, secrets and SDK clients live in modules that `import 'server-only'`, except modules that a separately bundled runtime imports, such as a Trigger.dev worker built without the `react-server` condition, where `server-only` throws; there, the rule is that no `'use client'` file imports them. No secret goes in a `NEXT_PUBLIC_` variable; a client component receives only the fields it renders, and `'use client'` goes on the smallest leaf that needs it. *Why:* props passed to a client component are sent to the browser, secrets included.
+Leave out **Freshness is explicit** only when nothing opts into caching (`cacheComponents`, `'use cache'`, `unstable_cache`, `fetch` with `force-cache` or `revalidate`, a segment `revalidate`, `force-static`, `generateStaticParams`) and every route that reads data renders per request, because it reads cookies, headers or `searchParams` or is `force-dynamic`. Without Cache Components, a route with none of these is prerendered at build and served stale.
+
+- **Server code stays on the server.** Database access, secrets and SDK clients live in modules that `import 'server-only'`, except modules that a separately bundled runtime imports, such as a Trigger.dev worker built without the `react-server` condition, where `server-only` throws; there, the rule is that no `'use client'` file imports them, directly or through another module. No secret goes in a `NEXT_PUBLIC_` variable; a client component receives only the fields it renders, and `'use client'` goes on the smallest leaf that needs it. *Why:* props passed to a client component are sent to the browser, secrets included.
 - **Every server action and route handler is a public endpoint.** It parses its arguments, form data, `searchParams` and cookies with the project's schema library or its own named parsers, whichever the code already uses, then checks the session and that the user owns the object, trusting nothing from the page that calls it. *Why:* anyone can call a server action directly with any arguments.
-- **Freshness is explicit.** Only for a project that caches (`cacheComponents`, `'use cache'`, `fetch` with `force-cache` or `revalidate`); without Cache Components, Next 16 does not cache `fetch` by default and a route that reads cookies renders per request, so leave the rule out. Every data read states how fresh it must be (`cache`, `revalidate`, `dynamic` or `'use cache'` with tags, as the installed version supports), and every write revalidates the paths or tags it changes. Check the version's defaults in the docs. *Why:* defaults changed between versions, and a stale page shows an old price after an edit.
+- **Freshness is explicit.** Every data read states how fresh it must be (`cache`, `revalidate`, `dynamic` or `'use cache'` with tags, as the installed version supports), and every write revalidates the paths or tags it changes. Check the version's defaults in the docs. *Why:* defaults changed between versions, and a stale page shows an old price after an edit.
 - **Independent reads start together.** A server component or action that needs several independent reads starts them at once (`Promise.all`, or separate components under `Suspense`), not one `await` after another. *Why:* each sequential `await` adds a full round trip to the page load.
 - **Logic lives in plain modules, with tests.** Rules about what is counted, filtered or stored are plain TypeScript functions with unit tests; components render and call them. *Why:* logic inside a component is tested only through the UI, if at all.
