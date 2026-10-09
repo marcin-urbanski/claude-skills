@@ -14,5 +14,5 @@ Reuse decisions from the spec:
 
 ## What to review
 Repository: [absolute path]
-Diff: `git diff [BASE]..[HEAD]`
+Diff: `git diff [BASE]...[HEAD]`
 ```
