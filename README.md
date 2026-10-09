@@ -7,14 +7,14 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 | Skill | What it's for |
 |---|---|
 | [handoff](skills/handoff/SKILL.md) | Writes one handoff per thread of work to `docs/handoffs/<slug>.md` when a session gets long or a task is finished, then gives you a prompt to paste into the next session. The file lives in the repo's main checkout, so it survives the worktree being deleted. A session that coordinates parallel worktree sessions writes `docs/handoffs/_overview.md` instead. Works with the two hooks below. |
-| [spec-first](skills/spec-first/SKILL.md) | Plans a change before any code is written, scaled to its size: a small fix goes straight to tests, a feature gets a short spec, an epic gets a spec and a plan committed on its feature branch, and a review per task. |
+| [spec-first](skills/spec-first/SKILL.md) | Plans a change before any code is written, scaled to its size: a small fix goes straight to tests, a feature gets a short spec, an epic gets a spec and a plan committed on its feature branch, and a review per task. An epic in a project without `CODING_STANDARDS.md` starts one from [a template](skills/spec-first/coding-standards-template.md) with Core candidates for Swift/SwiftUI, Laravel, WordPress and Next.js. |
 | [design-check](skills/design-check/SKILL.md) | Turns a Claude Design handoff export in `docs/design` into work: a spec for a new project, a report of what changed when a new export lands, and a design check before a UI pull request. |
 | [tdd](skills/tdd/SKILL.md) | Red, green, refactor for every change to production code. |
 | [systematic-debugging](skills/systematic-debugging/SKILL.md) | Find the root cause before fixing anything. |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md) | Run the tests, linters and build before saying something works. |
 | [ux-principles](skills/ux-principles/SKILL.md) | My UI/UX rulebook: avoiding generic AI-looking design, conversion psychology within honest limits, visual craft, interaction and app patterns, e-commerce product pages and checkout, and native iPhone, iPad and Mac apps. |
 | [pr](skills/pr/SKILL.md) | The format for a pull request body that a human can review fast: a small visual of the change (pseudocode, call tree, Mermaid, a diff of the shape), before-and-after evidence, and a merge danger call (one-way or two-way door, blast radius). `spec-first` uses it when it opens a PR. |
-| [retro](skills/retro/SKILL.md) | `/retro` after a hard session or a PR review: reads a digest of the session transcript (`digest.py`) and the PR's review comments, then proposes, most severe first, the automated check, coding standard, reviewer rule, skill fix or `CLAUDE.md` pointer that stops the same mistake from happening again. Only you can invoke it, and it changes nothing until you pick. |
+| [retro](skills/retro/SKILL.md) | `/retro` after a hard session or a PR review: reads a digest of the session transcript (`digest.py`) and the PR's review comments, then proposes, most severe first, the automated check, coding standard, reviewer rule, skill fix or `CLAUDE.md` pointer that stops the same mistake from happening again. It keeps `CODING_STANDARDS.md` within its template's limit by sharpening, merging or replacing rules. Only you can invoke it, and it changes nothing until you pick. |
 
 ## Subagents
 
@@ -22,7 +22,7 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 
 | Subagent | What it's for |
 |---|---|
-| [implementer](agents/implementer.md) | Builds one task from a plan test-first, verifies, commits, and reports RED/GREEN output. Cannot spawn subagents. |
+| [implementer](agents/implementer.md) | Builds one task from a plan test-first, following the project's `CODING_STANDARDS.md`, verifies, commits, and reports RED/GREEN output. Cannot spawn subagents. |
 | [reviewer](agents/reviewer.md) | Read-only review of a diff for reuse, security, the project's own `CODING_STANDARDS.md`, tests that cannot fail, code smells and spec compliance, with a verdict and findings by severity. |
 
 ## Hooks

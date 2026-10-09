@@ -44,22 +44,24 @@ The goal is that a human never writes the same review comment twice.
 | What happened | Fix | Where |
 |---|---|---|
 | A mistake a tool could catch (banned API, import shape, file location, naming pattern, formatting) | Automated check | The project's linter or static analysis rule, a pre-commit hook, a CI job, or a Claude Code hook in `.claude/settings.json` |
-| The reviewer missed a judgement call specific to this project | Rule | The project's `CODING_STANDARDS.md` (create it if missing) |
+| The reviewer missed a judgement call specific to this project | Rule | The project's `CODING_STANDARDS.md` (create it from `~/.claude/skills/spec-first/coding-standards-template.md` if missing) |
 | The reviewer missed a judgement call that applies to every project | Rule | `skills/spec-first/reviewer-checklist.md` in claude-skills |
 | A long search for a file, command or fact | Navigation pointer | One line in a file the agent already reads (`CLAUDE.md`, a skill), naming where the thing lives |
 | A skill or agent did the wrong thing, or skipped a step | Skill fix | The skill or agent file in claude-skills |
 | A crucial fact was out of reach (server logs, a third-party service, test output) | Information access | Write logs to a file, add read-only access, or a script that fetches it |
 | An expensive tool call (huge output, many retries of the same call) | Tool economy | A narrower command, a script, or a flag that trims output |
-| A rule in `CLAUDE.md` that implementation does not need | Move it | To the reviewer (standards or checklist) or to a check; keep `CLAUDE.md` for navigation pointers |
+| A rule in `CLAUDE.md` that only matters when code is written or reviewed | Move it | To a check; to `CODING_STANDARDS.md` for a judgement call in this project; to `reviewer-checklist.md` only when it applies to every project. Keep `CLAUDE.md` for navigation pointers |
 | A steering line the model already obeys without being told | No-op | Delete the sentence |
 
 Prefer a check over prose: a failing check holds every time, a sentence holds when the model notices it. Write prose only for genuine judgement calls.
 
-Coding standards belong to the reviewer, not the implementer. The implementer explores, writes and debugs, so every extra rule in its context costs. The reviewer receives a diff and has room for rules. Each line in `CLAUDE.md` loads into every session, so a new line there must earn it.
+`CODING_STANDARDS.md` is read by the implementer and checked by the reviewer, so each rule costs on every task; `coding-standards-template.md` sets its limit. Each line in `CLAUDE.md` loads into every session, so a new line there must earn it.
 
 ## Writing the proposed text
 
 - State the target behaviour ("store money as integer cents"); a prohibition alone puts the wrong behaviour in front of the model.
 - One meaning in one place: when a rule already exists, sharpen it instead of adding a second one.
 - Cut what the environment already says (config, scripts, directory layout); restate only what the agent cannot find by looking.
+- A rule for `CODING_STANDARDS.md` follows `~/.claude/skills/spec-first/coding-standards-template.md`: its format, when a rule may go under From evidence (otherwise tell the user it is a one-off and propose no rule), and which rule a new one replaces once the file is full; show the user both texts.
+- When a finding matches an existing rule, propose sharpening that rule and raising its count, not a second rule. A rule the reviewer applied and still missed needs narrower wording, not more words.
 - A retro sees one session, so it cannot tell whether an old rule or check is obsolete. Flag a line for deletion only when this session shows it changed nothing.
