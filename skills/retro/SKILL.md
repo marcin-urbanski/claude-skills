@@ -44,7 +44,7 @@ The goal is that a human never writes the same review comment twice.
 | What happened | Fix | Where |
 |---|---|---|
 | A mistake a tool could catch (banned API, import shape, file location, naming pattern, formatting) | Automated check | The project's linter or static analysis rule, a pre-commit hook, a CI job, or a Claude Code hook in `.claude/settings.json` |
-| The reviewer missed a judgement call specific to this project | Rule | The project's `CODING_STANDARDS.md` (create it if missing) |
+| The reviewer missed a judgement call specific to this project | Rule | The project's `CODING_STANDARDS.md` (create it from `~/.claude/skills/spec-first/coding-standards-template.md` if missing) |
 | The reviewer missed a judgement call that applies to every project | Rule | `skills/spec-first/reviewer-checklist.md` in claude-skills |
 | A long search for a file, command or fact | Navigation pointer | One line in a file the agent already reads (`CLAUDE.md`, a skill), naming where the thing lives |
 | A skill or agent did the wrong thing, or skipped a step | Skill fix | The skill or agent file in claude-skills |
@@ -55,11 +55,14 @@ The goal is that a human never writes the same review comment twice.
 
 Prefer a check over prose: a failing check holds every time, a sentence holds when the model notices it. Write prose only for genuine judgement calls.
 
-Coding standards belong to the reviewer, not the implementer. The implementer explores, writes and debugs, so every extra rule in its context costs. The reviewer receives a diff and has room for rules. Each line in `CLAUDE.md` loads into every session, so a new line there must earn it.
+`CODING_STANDARDS.md` is read by the implementer before it writes code and checked by the reviewer on every diff, so each rule costs on every task and the file holds at most 15. Each line in `CLAUDE.md` loads into every session, so a new line there must earn it.
 
 ## Writing the proposed text
 
 - State the target behaviour ("store money as integer cents"); a prohibition alone puts the wrong behaviour in front of the model.
 - One meaning in one place: when a rule already exists, sharpen it instead of adding a second one.
 - Cut what the environment already says (config, scripts, directory layout); restate only what the agent cannot find by looking.
+- A rule for `CODING_STANDARDS.md` follows the format in `coding-standards-template.md`: checkable on a diff, target behaviour first, *Why:* and the number of findings. It goes under From evidence when the problem came up at least twice (count earlier PRs a reviewer mentions) or the user corrected it; otherwise tell the user it is a one-off and propose no rule.
+- When a finding matches an existing rule, propose sharpening that rule and raising its count, not a second rule. A rule the reviewer applied and still missed needs narrower wording, not more words.
+- When the file already has 15 rules, a new rule merges with or replaces one: propose first a rule that an existing check already enforces, then the From evidence rule with the fewest findings (a Core rule leaves only through a check), and show the user both texts.
 - A retro sees one session, so it cannot tell whether an old rule or check is obsolete. Flag a line for deletion only when this session shows it changed nothing.

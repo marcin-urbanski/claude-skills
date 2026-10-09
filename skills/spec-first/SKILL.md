@@ -52,15 +52,17 @@ Then wait for approval. After approval, give a numbered task list (each task sma
    - **In short** is one short sentence for the user (about 15 words), in plain words: the gist of what the task changes and what they will see or get when it is done, not a list of everything it does. No codes the user would have to look up (mockup IDs, AC numbers, internal type names). The task title alone is not enough; the rest of the task is for the implementer.
    - Tasks ordered so each leaves the app working and tests green.
    - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2). A plan without parts is one part; number its tasks 1, 2, 3.
-3. Commit spec and plan together on the feature branch as its first commit (e.g. `docs: add spec and plan for <topic>`), before any task starts. A plan left untracked in a worktree disappears with it, and handoffs point at it; committed, any worktree gets it after `git switch <branch>`. If the project's `.gitignore` excludes the docs folder, tell the user and ask before forcing anything; never `git add -f` silently.
+3. Commit spec and plan together on the feature branch as its first commit (e.g. `docs: add spec and plan for <topic>`), with the new `CODING_STANDARDS.md` and its `CLAUDE.md` line if the epic starts them (below), before any task starts. A plan left untracked in a worktree disappears with it, and handoffs point at it; committed, any worktree gets it after `git switch <branch>`. If the project's `.gitignore` excludes the docs folder, tell the user and ask before forcing anything; never `git add -f` silently.
 
 Follow the project's CLAUDE.md for locations if it names others.
+
+**Coding standards.** An epic in a repository without `CODING_STANDARDS.md`, a new project included, starts one. Propose it in the spec under **Decisions needed** (default: yes), with its rules in a line each so the user sees what they approve: only the Core section from `coding-standards-template.md` in this folder, 5 to 7 rules taken from the stack's candidates and from the risks this spec names, each checked with a grep against the code there is. After approval, write the file and add the template's pointer line to the project's `CLAUDE.md`. From evidence stays empty until review finds the same problem twice.
 
 ## 5. Build
 
 For a fix or feature, create the branch first (per global git rules); an epic already has it from step 4. Then, per task:
 
-**Default (fix, feature):** do the task in this session with `tdd`, then a self-review against `reviewer-checklist.md` in this folder: reuse, security, best practices, spec compliance. Fix what you find. Commit with a conventional message. Next task.
+**Default (fix, feature):** do the task in this session with `tdd`, then a self-review against `reviewer-checklist.md` in this folder and the project's `CODING_STANDARDS.md`, if it has one: reuse, security, best practices, spec compliance. Fix what you find. Commit with a conventional message. Next task.
 
 **Epic:** for each task, dispatch one `implementer` subagent and then one fresh `reviewer` subagent. Both are installed in `~/.claude/agents/` (from the claude-skills repo): the implementer starts with `tdd` and `verification-before-completion` loaded and cannot spawn subagents, the reviewer is read-only.
 
