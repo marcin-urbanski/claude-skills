@@ -9,7 +9,7 @@ Fill in the brackets and pass as the prompt of the `reviewer` subagent (`~/.clau
 Global constraints:
 [Constraints from the spec/plan, or "none"]
 
-Reuse decisions from the spec:
+Reuse decisions (from the spec, or from chat for a fix):
 [What was supposed to be reused or extended]
 
 ## What to review
