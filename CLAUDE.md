@@ -46,7 +46,9 @@ These two also live in claude.ai, so a change is not live there until re-uploade
 
 ## Testing skill changes
 
-Test every change to a skill's behaviour with subagents:
+For skills where firing or a measurable behaviour matters (`tdd`, `verification-before-completion`), use `claude plugin eval` first: add or reuse a case in `evals/` and follow `evals/README.md`. The no-plugin arm runs alongside, and the version on `main` is the baseline: run it before changing the skill, at least 5 runs per case. Before trusting a score, read a few kept traces (`--keep-temp`): a grader can be wrong too.
+
+Skills that rest on judgment (`spec-first`, `pr`, `retro`) and changes no eval case covers are tested with subagents:
 
 1. Baseline first: run a subagent on each scenario the change targets with the current version (the one on `main`) and record what it does.
 2. Make the change in the worktree. The installed skill is still `main`'s, so tell the test subagents to read the skill from the worktree path.

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Small Python project with a lost-grosz bug in split_cents. Shared by the tdd cases.
+# Small Python project with a lost-grosz bug in split_cents. Shared by the tdd cases and verify-under-pressure.
 set -euo pipefail
 cat > README.md <<'EOF'
 # splitbill
