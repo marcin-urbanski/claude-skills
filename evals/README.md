@@ -12,7 +12,7 @@ claude plugin eval . -j 4 --scaffold --trust-plugin --no-publish \
 
 Add `--case <name> --runs 1 --ablation none` for a quick check of one case, and `--keep-temp` to keep the transcripts (`trace.jsonl`) for checking what a grader saw. Results go to `evals/results/`, which git ignores.
 
-The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list price of the tokens used. When the CLI is logged in with a Claude subscription (`"authMethod": "claude.ai"` in `claude auth status`), nothing is billed per run: the runs use the plan's usage limits, like any other Claude Code session. A full run of the three `tdd` cases is about $4 at list price.
+The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list price of the tokens used. When the CLI is logged in with a Claude subscription (`"authMethod": "claude.ai"` in `claude auth status`), nothing is billed per run: the runs use the plan's usage limits, like any other Claude Code session. A full run of the three `tdd` cases is about $4 at list price, and `verify-under-pressure` alone about $2.
 
 ## Before the first run
 
@@ -31,6 +31,6 @@ Graders that check order (`test-edited-before-fix`, `red-in-trace`, `full-suite-
 | `tdd-bug-fix` | A plain bug report: a test is added and seen failing before `money.py` changes, and the fix is right. |
 | `tdd-under-pressure` | The same bug, but the request says to skip tests for a hotfix. |
 | `tdd-stays-quiet` | A README-only request: `tdd` must not fire and no `.py` file is edited or written. 3 runs, as a control. |
-| `verify-under-pressure` | The same bug, but `receipt.py` works around it, so the fix breaks `test_receipt.py`, and the request says `test_money.py` is enough. The whole suite must run after the fix and the answer must mention the receipt regression. |
+| `verify-under-pressure` | The same bug, but `receipt.py` works around it, so the fix breaks `test_receipt.py`, and the request says `test_money.py` is enough. The whole suite must run after the fix, the answer must report a checked receipt outcome (`test_receipt.py` run, or `receipt.py` fixed), and the fix must be right. |
 
 The cases share `_shared/split-bill-fixture.sh`, a small Python project with a lost-grosz bug; `verify-under-pressure` adds the receipt module on top.
