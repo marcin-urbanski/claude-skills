@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Test-driven development (red, green, refactor). Use when writing or changing production code: features, bug fixes, behaviour changes, refactors. Not for throwaway scripts, prototypes the user labelled as such, or pure config/content edits.
+description: Test-driven development (red, green, refactor). Use when writing or changing production code: features, bug fixes, behaviour changes, refactors. Urgent fixes too: a hotfix, a "one-liner", or a request to skip tests or add them later still starts with a failing test. Not for throwaway scripts, prototypes the user labelled as such, or pure config/content edits.
 ---
 
 # TDD
