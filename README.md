@@ -7,7 +7,7 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 | Skill | What it's for |
 |---|---|
 | [handoff](skills/handoff/SKILL.md) | Writes one handoff per thread of work to `docs/handoffs/<slug>.md` when a session gets long or a task is finished, then gives you a prompt to paste into the next session. The file lives in the repo's main checkout, so it survives the worktree being deleted. A session that coordinates parallel worktree sessions writes `docs/handoffs/_overview.md` instead. Works with the two hooks below. |
-| [spec-first](skills/spec-first/SKILL.md) | Plans a change before any code is written, scaled to its size: a small fix goes straight to tests, a feature gets a short spec, an epic gets a spec and a plan committed on its feature branch, and a review per task. An epic in a project without `CODING_STANDARDS.md` starts one from [a template](skills/spec-first/coding-standards-template.md) with Core candidates for Swift/SwiftUI, Laravel, WordPress and Next.js. |
+| [spec-first](skills/spec-first/SKILL.md) | Plans a change before any code is written, scaled to its size: a small fix goes straight to tests, a feature gets a short spec, an epic gets a spec and a plan committed on its feature branch, an adversarial review of the plan before it is built, and a review per task. An epic in a project without `CODING_STANDARDS.md` starts one from [a template](skills/spec-first/coding-standards-template.md) with Core candidates for Swift/SwiftUI, Laravel, WordPress and Next.js. |
 | [design-check](skills/design-check/SKILL.md) | Turns a Claude Design handoff export in `docs/design` into work: a spec for a new project, a report of what changed when a new export lands, and a design check before a UI pull request. |
 | [tdd](skills/tdd/SKILL.md) | Red, green, refactor for every change to production code. |
 | [systematic-debugging](skills/systematic-debugging/SKILL.md) | Find the root cause before fixing anything. |
@@ -23,7 +23,7 @@ The skills, subagents and hooks I use every day with [Claude Code](https://code.
 | Subagent | What it's for |
 |---|---|
 | [implementer](agents/implementer.md) | Builds one task from a plan test-first, following the project's `CODING_STANDARDS.md`, verifies, commits, and reports RED/GREEN output. Cannot spawn subagents. |
-| [reviewer](agents/reviewer.md) | Read-only review of a diff for reuse, security, the project's own `CODING_STANDARDS.md`, tests that cannot fail, code smells and spec compliance, with a verdict and findings by severity. |
+| [reviewer](agents/reviewer.md) | Read-only review of a diff for reuse, security, the project's own `CODING_STANDARDS.md`, tests that cannot fail, code smells and spec compliance, with a verdict and findings by severity. With [its own prompt](skills/spec-first/plan-review-prompt.md) it also reviews an epic's plan before any code is written. |
 
 ## Hooks
 
@@ -87,6 +87,8 @@ For claude.ai, zip a skill folder (for example `handoff/` with its `SKILL.md`) a
 `tdd`, `systematic-debugging` and `verification-before-completion` are adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent (MIT). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 `pr` and `retro` are adapted from [mattpocock/skills](https://github.com/mattpocock/skills) by Matt Pocock (MIT). The Summary visuals in `pr` come from Dex Horthy's [`show-me`](https://github.com/humanlayer/skills) (MIT), via Matt's skill. The test-smell and code-smell sections of the reviewer checklist follow Matt's `code-review` skill and his talk on the PR bottleneck. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
+The adversarial plan review in `spec-first` is adapted from the `doubt-driven-development` skill in [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) by Addy Osmani (MIT). See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 `ux-principles` builds on uxpeak's [UI/UX Playbook](https://www.uxpeak.com) (free preview) and their video [The UX Psychology Behind Apps People Can't Stop Using](https://www.youtube.com/watch?v=2TlIg3VokY8), rewritten and extended in my own words. Its app-pattern and Apple-platform references are based on Apple's [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/), paraphrased as rules.
 

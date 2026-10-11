@@ -52,7 +52,14 @@ Then wait for approval. After approval, give a numbered task list (each task sma
    - **In short** is one short sentence for the user (about 15 words), in plain words: the gist of what the task changes and what they will see or get when it is done, not a list of everything it does. No codes the user would have to look up (mockup IDs, AC numbers, internal type names). The task title alone is not enough; the rest of the task is for the implementer.
    - Tasks ordered so each leaves the app working and tests green.
    - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2). A plan without parts is one part; number its tasks 1, 2, 3.
-3. Commit spec and plan together on the feature branch as its first commit (e.g. `docs: add spec and plan for <topic>`), with the new `CODING_STANDARDS.md` and its `CLAUDE.md` line if the epic starts them (below), before any task starts. A plan left untracked in a worktree disappears with it, and handoffs point at it; committed, any worktree gets it after `git switch <branch>`. If the project's `.gitignore` excludes the docs folder, tell the user and ask before forcing anything; never `git add -f` silently.
+3. Review the plan adversarially before anyone builds from it. Dispatch one fresh `reviewer` subagent with `plan-review-prompt.md` in this folder: it gets the spec, the plan and the repository, never your reasons for the choices, since a reviewer handed conclusions tends to confirm them. Re-read the plan and the code each finding points at, then sort it (first match wins):
+   - **Spec gap**: the spec is silent, unclear or wrong → a question for the user, with your default. Gaps you found yourself while writing the plan go in the same message.
+   - **Plan fix**: real → fix the plan.
+   - **Trade-off**: real, but fixing costs more than accepting → note it in the plan header and tell the user.
+   - **Noise**: wrong given context the reviewer lacked, or right but asking for no change → drop it, and add that context to the plan's global constraints if its absence caused the finding.
+
+   Tell the user in a few lines what the review changed, with the spec questions. If there are questions, wait for the answers, record them in the spec and adjust the plan. Then re-review with a fresh reviewer, but only when the fixes or answers changed tasks substantially, for at most 3 rounds; still substantive findings after the third go to the user.
+4. Commit spec and plan together on the feature branch as its first commit (e.g. `docs: add spec and plan for <topic>`), with the new `CODING_STANDARDS.md` and its `CLAUDE.md` line if the epic starts them (below), before any task starts. A plan left untracked in a worktree disappears with it, and handoffs point at it; committed, any worktree gets it after `git switch <branch>`. If the project's `.gitignore` excludes the docs folder, tell the user and ask before forcing anything; never `git add -f` silently.
 
 Follow the project's CLAUDE.md for locations if it names others.
 
