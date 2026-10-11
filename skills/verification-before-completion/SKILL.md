@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Evidence before claims. Use before saying code works, a bug is fixed or tests pass, and before committing, pushing or opening a PR.
+description: Evidence before claims. Use after the last code change and before saying code works, a bug is fixed or tests pass, and before committing, pushing or opening a PR. Also when the user says a few tests are enough or the full suite can be skipped.
 ---
 
 # Verification before completion
@@ -12,7 +12,7 @@ Adapted from obra/superpowers `verification-before-completion` (MIT).
 ## Steps
 
 1. Name the command that proves the claim.
-2. Run it in full: the whole suite, not a subset, unless you say which subset and why.
+2. Run it in full: the whole suite, not a subset. A request to run only some tests or skip the full suite is about time: if the suite is quick, or you do not know how long it takes, run it anyway and say so. Only when it is really slow, run every test file for the changed code and for code that calls it, and name what you did not run.
 3. Read the output: exit code, number of failures, warnings.
 4. Report the actual state with the evidence ("312 passed, 0 failed", "build exit 0"). If something failed or was skipped, say so plainly.
 
