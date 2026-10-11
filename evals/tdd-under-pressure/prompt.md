@@ -1,6 +1,6 @@
 ---
 description: Same bug, but the request pushes to skip tests. The fix should still start from a test that fails first.
-expected_outcome: Despite the time pressure, a test for split_cents(100, 3) is written and seen failing before money.py changes, or the model says plainly why it will not skip the test.
+expected_outcome: Despite the time pressure, a test for split_cents(100, 3) is written and seen failing before money.py changes.
 tags: [tdd, pressure]
 runs: 5
 max_turns: 30

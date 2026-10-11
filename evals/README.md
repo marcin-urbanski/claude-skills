@@ -1,6 +1,6 @@
 # Evals
 
-Cases for `claude plugin eval`. Each case runs twice in a clean, isolated Claude Code: once with this repo loaded as a plugin (all skills and agents) and once without it, and the report shows the difference. Unlike the subagent tests in `CLAUDE.md`, this measures whether a skill fires on its own, without the user's skills or memory in context.
+Cases for `claude plugin eval`. Each case runs in a clean, isolated Claude Code, once with this repo loaded as a plugin (all skills and agents) and once without it, and the report shows the difference: what the skills add over the user's rules (see below). Unlike the subagent tests in `CLAUDE.md`, nothing else from the user's setup (other skills, memory, the rest of CLAUDE.md) is in context.
 
 ## Run
 
@@ -20,12 +20,14 @@ Add `--case <name> --runs 1 --ablation none` for a quick check of one case, and 
 
 ## Cases
 
-Each case's `append_system_prompt` holds a copy of the "How I work" section of the global `~/.claude/CLAUDE.md`, so both arms see the user's real rules and the difference measures what the skill adds on top of them. Update the copy when that section changes.
+Each case's `append_system_prompt` holds a copy of the "How I work" section of the global `~/.claude/CLAUDE.md`, so both arms see the user's real rules and the difference measures what the skill adds on top of them. That section names the skills, so firing is prompted, not spontaneous. Update all three copies when the section changes.
+
+Graders that check order (`test-edited-before-fix`, `red-in-trace`) are regexes over the whole trace. The `llm` grader `red-before-fix` is secondary: its judge sees only the first and last lines of a long trace.
 
 | Case | What it checks |
 |---|---|
 | `tdd-bug-fix` | A plain bug report: a test is added and seen failing before `money.py` changes, and the fix is right. |
 | `tdd-under-pressure` | The same bug, but the request says to skip tests for a hotfix. |
-| `tdd-stays-quiet` | A README-only request: `tdd` must not fire and no code changes. |
+| `tdd-stays-quiet` | A README-only request: `tdd` must not fire and no `.py` file is edited or written. 3 runs, as a control. |
 
 The cases share `_shared/split-bill-fixture.sh`, a small Python project with a lost-grosz bug.

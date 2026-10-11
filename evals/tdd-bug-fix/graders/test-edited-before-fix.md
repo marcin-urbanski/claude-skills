@@ -1,9 +1,6 @@
 ---
-type: tool_order
-before:
-  tool: Edit
-  input_match: 'test_money\.py'
-after:
-  tool: Edit
-  input_match: '/money\.py"'
+type: regex
+target: trace
+pattern: '^(?:(?!"file_path":"[^"]*/money\.py","(?:old_string|content)")[\s\S])*?"file_path":"[^"]*/test[^"/]*\.py","(?:old_string|content)"'
 ---
+A test file is changed (Edit or Write) before money.py is.
