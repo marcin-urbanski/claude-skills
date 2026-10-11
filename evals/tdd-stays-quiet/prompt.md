@@ -5,7 +5,7 @@ tags: [tdd, negative]
 runs: 3
 max_turns: 15
 timeout_seconds: 600
-allowed_tools: [Read, Glob, Grep, Skill, TodoWrite, Write, Edit, "Bash(python3 -m unittest*)"]
+allowed_tools: [Read, Glob, Grep, Skill, TodoWrite, Write, Edit, "Bash(python3 -m *)"]
 append_system_prompt: |
   The user's global instructions (~/.claude/CLAUDE.md), section "How I work":
 
