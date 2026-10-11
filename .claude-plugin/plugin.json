@@ -1,0 +1,6 @@
+{
+  "name": "marcin-skills",
+  "version": "0.1.0",
+  "description": "Personal skills and subagents. The manifest exists so `claude plugin eval` can test the skills; sessions still load them through the ~/.claude symlinks.",
+  "author": { "name": "Marcin Urbanski" }
+}
