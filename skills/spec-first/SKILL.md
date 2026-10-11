@@ -15,7 +15,7 @@ Say the size in one line so the user can correct it, then follow that path.
 |---|---|---|
 | **Fix** | bug, typo, config value, a change inside one function | No spec. Reuse check, then `tdd` (or `systematic-debugging` for a bug). |
 | **Feature** | a user story: new endpoint, form, screen, integration step | Short spec **in chat** → user approves → task list in chat → branch → build with `tdd` |
-| **Epic** | new module, several stories, schema redesign, anything spanning sessions | Spec file → user approves → plan file → build task by task with review per task |
+| **Epic** | new module, several stories, schema redesign, anything spanning sessions | Spec file → user approves → plan file → plan review → build task by task with review per task |
 
 If a fix turns out bigger than it looked, stop and say so, then move up a size. Do not ask for approval of a fix; just do it well.
 
@@ -54,11 +54,11 @@ Then wait for approval. After approval, give a numbered task list (each task sma
    - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2). A plan without parts is one part; number its tasks 1, 2, 3.
 3. Review the plan adversarially before anyone builds from it. Dispatch one fresh `reviewer` subagent with `plan-review-prompt.md` in this folder: it gets the spec, the plan and the repository, never your reasons for the choices, since a reviewer handed conclusions tends to confirm them. Re-read the plan and the code each finding points at, then sort it (first match wins):
    - **Spec gap**: the spec is silent, unclear or wrong → a question for the user, with your default. Gaps you found yourself while writing the plan go in the same message.
-   - **Plan fix**: real → fix the plan.
-   - **Trade-off**: real, but fixing costs more than accepting → note it in the plan header and tell the user.
    - **Noise**: wrong given context the reviewer lacked, or right but asking for no change → drop it, and add that context to the plan's global constraints if its absence caused the finding.
+   - **Trade-off**: real, but fixing costs more than accepting → note it in the plan header and tell the user.
+   - **Plan fix**: any other real finding → fix the plan.
 
-   Tell the user in a few lines what the review changed, with the spec questions. If there are questions, wait for the answers, record them in the spec and adjust the plan. Then re-review with a fresh reviewer, but only when the fixes or answers changed tasks substantially, for at most 3 rounds; still substantive findings after the third go to the user.
+   Tell the user in a few lines what the review changed, with the spec questions. If there are questions, wait for the answers, record them in the spec and adjust the plan. Then re-review with a fresh reviewer, but only when the fixes or answers changed tasks substantially, for at most 3 reviews in total; substantive findings still left after the third go to the user. If the session ends while you wait, the handoff says the plan review is open and the plan not yet committed.
 4. Commit spec and plan together on the feature branch as its first commit (e.g. `docs: add spec and plan for <topic>`), with the new `CODING_STANDARDS.md` and its `CLAUDE.md` line if the epic starts them (below), before any task starts. A plan left untracked in a worktree disappears with it, and handoffs point at it; committed, any worktree gets it after `git switch <branch>`. If the project's `.gitignore` excludes the docs folder, tell the user and ask before forcing anything; never `git add -f` silently.
 
 Follow the project's CLAUDE.md for locations if it names others.
