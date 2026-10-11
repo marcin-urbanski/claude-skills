@@ -7,10 +7,12 @@ Cases for `claude plugin eval`. Each case runs in a clean, isolated Claude Code,
 ```bash
 claude plugin eval . -j 4 --scaffold --trust-plugin --no-publish \
   --model claude-opus-5-5 --judge-model haiku --max-cost-usd 10 \
-  --allow-tools Write Edit "Bash(python3 -m unittest*)"
+  --allow-tools Write Edit "Bash(python3 -m *)"
 ```
 
 Add `--case <name> --runs 1 --ablation none` for a quick check of one case, and `--keep-temp` to keep the transcripts (`trace.jsonl`) for checking what a grader saw. Results go to `evals/results/`, which git ignores.
+
+The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list price of the tokens used. When the CLI is logged in with a Claude subscription (`"authMethod": "claude.ai"` in `claude auth status`), nothing is billed per run: the runs use the plan's usage limits, like any other Claude Code session. A full run of the three cases is about $4 at list price.
 
 ## Before the first run
 
