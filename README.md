@@ -2,6 +2,8 @@
 
 The skills, subagents and hooks I use every day with [Claude Code](https://code.claude.com). This repo is also where they live: the folders in `~/.claude/skills` on my Mac are symlinks to it, so every change is tracked in git.
 
+They encode my way of working, and some are strict on purpose: `tdd` writes a failing test even when asked to skip it. Take what fits your workflow and [turn off the rest](#turning-parts-off).
+
 ## Skills
 
 | Skill | What it's for |
@@ -87,6 +89,23 @@ claude plugin install marcin-skills@marcin-skills
 ```
 
 Restart Claude Code afterwards. Plugin skills are namespaced, for example `/marcin-skills:tdd`. To get new commits, run `claude plugin update marcin-skills@marcin-skills`, or turn on auto-update for the marketplace under `/plugin` → Marketplaces. The hooks use `jq`: without it the nudge never fires and the load hook cannot tell a compaction from a fresh start.
+
+### Turning parts off
+
+Add deny rules to `~/.claude/settings.json` (or a project's `.claude/settings.json`) to keep the plugin but drop a piece of it:
+
+```json
+{
+  "permissions": {
+    "deny": ["Skill(marcin-skills:tdd)", "Agent(marcin-skills:reviewer)"]
+  }
+}
+```
+
+- **A skill:** `Skill(marcin-skills:<name>)`. Claude still sees it in its list but cannot run it.
+- **A subagent:** `Agent(marcin-skills:<name>)`. It disappears from the list of agent types. `spec-first` needs both `implementer` and `reviewer` for epics.
+- **The hooks:** a plugin's hooks cannot be turned off one by one. `"disableAllHooks": true` turns off every hook, your own included. To get the skills without the hooks, install single skills instead (below).
+- **Everything:** `claude plugin disable marcin-skills@marcin-skills`, or `claude plugin uninstall marcin-skills@marcin-skills`.
 
 ### Single skills
 
