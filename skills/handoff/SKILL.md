@@ -7,14 +7,18 @@ description: Write or update this thread's handoff file in the repo's handoffs f
 
 Write the state of the current work to this thread's handoff file, so a fresh session can pick it up without re-reading this conversation. Then give the user a prompt to paste into that session.
 
-A **thread** is one line of work with a goal (for example "best score"); it may span several branches, one per PR of a plan. Each thread has one file, `<slug>.md`, in the repo's **handoffs folder**, the same folder from every worktree of the repo. It is outside the repo: a file inside a linked worktree is deleted with the worktree, and Claude Code refuses writes from a desktop-app worktree (`.claude/worktrees/<name>`) into the main checkout. Find it from anywhere inside the current checkout:
+A **thread** is one line of work with a goal (for example "best score"); it may span several branches, one per PR of a plan. Each thread has one file, `<slug>.md`, in the repo's **handoffs folder**, the same folder from every worktree of the repo. It is outside the repo: a file inside a linked worktree is deleted with the worktree, and Claude Code refuses writes from a desktop-app worktree (`.claude/worktrees/<name>`) into the main checkout. Print its path with this one command, run in a single Bash call from anywhere inside the current checkout:
 
-1. The main checkout, first case that applies:
-   1. `common=$(git rev-parse --path-format=absolute --git-common-dir)`. If it equals `git rev-parse --path-format=absolute --git-dir`, this is the main checkout: `git rev-parse --show-toplevel`.
-   2. `git --git-dir="$common" config core.worktree` prints a value (a linked worktree of a submodule): the main checkout is `git --git-dir="$common" rev-parse --show-toplevel`.
-   3. `common` ends in `/.git` (a linked worktree of a normal repo): the main checkout is its parent directory.
-   4. Otherwise (a linked worktree of a `--separate-git-dir` repo) there is no main checkout to use: tell the user the handoff cannot be shared across worktrees and ask where to write it.
-2. The handoffs folder is named after the main checkout's path `$main`, every byte other than a letter or digit replaced by `-` (the SessionStart hook builds the same name): `echo "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/handoffs/$(printf '%s' "$main" | LC_ALL=C tr -c 'A-Za-z0-9' '-')"`. For `/Users/me/Developer/app` that is `~/.claude/handoffs/-Users-me-Developer-app`.
+```bash
+common=$(git rev-parse --path-format=absolute --git-common-dir)
+if [ "$common" = "$(git rev-parse --path-format=absolute --git-dir)" ]; then main=$(git rev-parse --show-toplevel)
+elif [ -n "$(git --git-dir="$common" config core.worktree)" ]; then main=$(git --git-dir="$common" rev-parse --show-toplevel)
+elif [ "${common##*/}" = .git ]; then main=${common%/.git}
+else main=""; fi
+[ -n "$main" ] && echo "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/handoffs/$(printf '%s' "$main" | LC_ALL=C tr -c 'A-Za-z0-9' '-')"
+```
+
+It finds the main checkout (this checkout, the submodule's checkout for a linked worktree of a submodule, or the parent of the common `.git`) and names the folder after its path, every byte other than a letter or digit replaced by `-`, as the SessionStart hook does: `/Users/me/Developer/app` gives `~/.claude/handoffs/-Users-me-Developer-app`. If it prints nothing (a linked worktree of a `--separate-git-dir` repo), there is no main checkout to use: tell the user the handoff cannot be shared across worktrees and ask where to write it. Moving or renaming the main checkout changes the name, so its threads stay in the folder of the old path.
 
 **Old folder**: thread files used to live in `<main checkout>/docs/handoffs/`. The hook still loads and lists them, and names their path. To update one, write it to the handoffs folder under the same slug and leave the old file alone: the hook ignores it from then on. Never write new files there.
 
@@ -44,7 +48,7 @@ If this session is the orchestrator, write `_overview.md` (see Orchestrator belo
 ## Before writing
 
 1. Check `git status` and `git diff --stat` so "Done" reflects what actually changed.
-2. Create the handoffs folder if it does not exist (`mkdir -p`).
+2. The Write tool creates the handoffs folder if it does not exist.
 3. **Legacy file**: if the current checkout has `docs/handoff.md` (the old single-file handoff) for the same work, for example because the hook loaded it, carry its still-relevant content (decisions, gotchas, next steps) into the file you write, then delete `docs/handoff.md`. If it describes other unfinished work, leave it.
 
 ## Format
