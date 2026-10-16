@@ -71,7 +71,7 @@ For a fix or feature, create the branch first (per global git rules); an epic al
 
 **Default (fix, feature):** do the task in this session with `tdd`, then a self-review against `reviewer-checklist.md` in this folder and the project's `CODING_STANDARDS.md` and `CONTRIBUTING.md`, whichever exist: reuse, security, best practices, spec compliance. Fix what you find. Commit with a conventional message. Next task.
 
-**Epic:** for each task, dispatch one `implementer` subagent and then one fresh `reviewer` subagent. Both are installed in `~/.claude/agents/` (from the claude-skills repo): the implementer starts with `tdd` and `verification-before-completion` loaded and cannot spawn subagents, the reviewer is read-only.
+**Epic:** for each task, dispatch one `implementer` subagent and then one fresh `reviewer` subagent. Both come from the claude-skills repo, linked into `~/.claude/agents/` or installed with its `marcin-skills` plugin (then named `marcin-skills:implementer` and `marcin-skills:reviewer`): the implementer starts with `tdd` and `verification-before-completion` loaded and cannot spawn subagents, the reviewer is read-only.
 
 - Implementer prompt: the task text from the plan, global constraints and the reuse list. The agent's own instructions cover TDD, verification, the commit and the report.
 - Reviewer prompt: `reviewer-prompt.md` in this folder, filled in with the task, constraints and the commit range.

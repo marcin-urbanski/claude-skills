@@ -1,0 +1,12 @@
+{
+  "name": "marcin-skills",
+  "description": "Marcin Urbanski's Claude Code skills, subagents and handoff hooks.",
+  "owner": { "name": "Marcin Urbanski" },
+  "plugins": [
+    {
+      "name": "marcin-skills",
+      "source": ".",
+      "description": "Spec-first planning, TDD, systematic debugging, verification before completion, handoffs between sessions, PR descriptions, retros, design checks and a UI/UX rulebook, with implementer and reviewer subagents."
+    }
+  ]
+}

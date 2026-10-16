@@ -71,6 +71,27 @@ A skill call is easy to miss in the chat. This inline hook (no script needed) pr
 
 ## Install
 
+### As a plugin
+
+Install every skill, both subagents and the `handoff` hooks in one step, from a Claude Code session (2.1.275 or later):
+
+```
+/plugin install marcin-skills --marketplace marcin-urbanski/claude-skills
+```
+
+Or from a terminal:
+
+```bash
+claude plugin marketplace add marcin-urbanski/claude-skills
+claude plugin install marcin-skills@marcin-skills
+```
+
+Restart Claude Code afterwards. Plugin skills are namespaced, for example `/marcin-skills:tdd`. To get new commits, run `claude plugin update marcin-skills@marcin-skills`, or turn on auto-update for the marketplace under `/plugin` → Marketplaces. The hooks need `jq` and do nothing without it.
+
+### Single skills
+
+Some skills lean on others: `spec-first` delegates to the `implementer` and `reviewer` subagents and points them at `tdd` and `verification-before-completion`, and `handoff` works best with its two hooks. Install those together.
+
 Clone the repo and link the skills you want into your personal skills folder:
 
 ```bash
