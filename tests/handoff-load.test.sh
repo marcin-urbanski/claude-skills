@@ -10,6 +10,14 @@ trap 'rm -rf "$TMP"' EXIT
 # Isolate git from the user's and system config, and stop it from finding repos above $TMP.
 export GIT_CONFIG_GLOBAL=/dev/null GIT_CONFIG_NOSYSTEM=1 GIT_CEILING_DIRECTORIES="$TMP"
 git() { command git -c user.name=Test -c user.email=test@example.com "$@"; }
+# Keep thread folders out of the real ~/.claude.
+export HOME="$TMP/home" CLAUDE_CONFIG_DIR="$TMP/config"
+
+# handoffs_dir <main checkout>: its thread folder, <config dir>/handoffs/<path with every byte
+# other than a letter or digit replaced by ->.
+handoffs_dir() {
+  printf '%s/handoffs/%s' "$CLAUDE_CONFIG_DIR" "$(printf '%s' "$1" | LC_ALL=C sed 's/[^A-Za-z0-9]/-/g')"
+}
 
 passed=0
 failed=0
@@ -75,7 +83,8 @@ new_fixture() {
   git -C "$main" commit -q --allow-empty -m init
   git -C "$main" worktree add -q -b feature/a "$base/wt-a"
   git -C "$main" worktree add -q -b feature/b "$base/wt-b"
-  threads="$main/docs/handoffs"
+  threads=$(handoffs_dir "$main")
+  old_threads="$main/docs/handoffs"
 }
 
 # write_thread <slug> <status> <branch> <marker>
@@ -784,8 +793,8 @@ new_submodule_fixture() {
   git -C "$super" commit -q --allow-empty -m init
   git -c protocol.file.allow=always -C "$super" submodule add -q "$base/lib" libsub
   git -c protocol.file.allow=always -C "$super" submodule add -q "$base/lib2" libsub2
-  super_threads="$super/docs/handoffs"
-  sub_threads="$sub/docs/handoffs"
+  super_threads=$(handoffs_dir "$super")
+  sub_threads=$(handoffs_dir "$sub")
 }
 
 test_submodule_loads_thread_from_its_own_checkout() {
@@ -876,7 +885,7 @@ new_separate_git_dir_fixture() {
   repo="$base/repo"
   git init -q -b main --separate-git-dir "$base/repo.git" "$repo"
   git -C "$repo" commit -q --allow-empty -m init
-  threads="$repo/docs/handoffs"
+  threads=$(handoffs_dir "$repo")
 }
 
 test_separate_git_dir_loads_thread_in_main_checkout() {
@@ -893,9 +902,131 @@ test_separate_git_dir_linked_worktree_is_quiet() {
   git -C "$repo" worktree add -q -b feature/x "$base/repo-wt"
   write_thread r-thing in-progress feature/x "MARKER-R"
   # The parent of the external git dir is outside the repo: never read from there.
-  threads="$base/docs/handoffs"
+  threads=$(handoffs_dir "$base")
   write_thread outside in-progress feature/x "MARKER-OUTSIDE"
+  threads="$base/docs/handoffs"
+  write_thread outside-old in-progress feature/x "MARKER-OUTSIDE-OLD"
   run_hook "$base/repo-wt"
+  assert_exit_0
+  assert_empty
+}
+
+# Thread folder outside the repo: a desktop-app worktree may not write into the main checkout.
+
+test_thread_folder_is_named_after_main_checkout_path() {
+  new_fixture
+  # The fixture path has slashes, dots (case.XXXXXX) and maybe underscores (macOS TMPDIR); all become dashes.
+  mkdir -p "$CLAUDE_CONFIG_DIR/handoffs/$(printf '%s' "$main" | tr './_' '---')"
+  printf 'Status: in-progress\nBranch: feature/a\n\nMARKER-A\n' >"$CLAUDE_CONFIG_DIR/handoffs/$(printf '%s' "$main" | tr './_' '---')/a-thing.md"
+  run_hook "$base/wt-a"
+  assert_contains "MARKER-A"
+}
+
+test_thread_folder_defaults_to_home_claude() {
+  new_fixture
+  threads="$HOME/.claude/handoffs/${threads##*/}"
+  write_thread a-thing in-progress feature/a "MARKER-A"
+  out=$(env -u CLAUDE_CONFIG_DIR CLAUDE_PROJECT_DIR="$base/wt-a" "$BASH" "$HOOK" </dev/null 2>&1)
+  code=$?
+  assert_exit_0
+  assert_contains "----- $threads/a-thing.md -----"
+}
+
+test_thread_folder_name_does_not_depend_on_locale() {
+  local utf8
+  utf8=$(locale -a 2>/dev/null | grep -i -m1 'utf-\?8$' || true)
+  [ -n "$utf8" ] || return 0
+  base=$(cd "$(mktemp -d "$TMP/case.XXXXXX")" && pwd -P)
+  main="$base/zażółć"
+  git init -q -b main "$main"
+  git -C "$main" commit -q --allow-empty -m init
+  git -C "$main" worktree add -q -b feature/a "$base/wt-a"
+  threads=$(handoffs_dir "$main")
+  write_thread a-thing in-progress feature/a "MARKER-A"
+  out=$(LC_ALL="$utf8" CLAUDE_PROJECT_DIR="$base/wt-a" "$BASH" "$HOOK" </dev/null 2>&1)
+  code=$?
+  assert_exit_0
+  assert_contains "MARKER-A"
+}
+
+# Old thread folder, <main checkout>/docs/handoffs: its files keep loading.
+
+# write_old_thread <slug> <status> <branch> <marker>
+write_old_thread() {
+  local new="$threads"
+  threads="$old_threads"
+  write_thread "$@"
+  threads="$new"
+}
+
+test_old_folder_thread_loads_for_current_branch() {
+  new_fixture
+  write_old_thread a-thing in-progress feature/a "MARKER-OLD"
+  run_hook "$base/wt-a"
+  assert_exit_0
+  assert_contains "MARKER-OLD"
+  assert_contains "----- $old_threads/a-thing.md -----"
+}
+
+test_old_folder_thread_loads_in_worktree_under_claude_worktrees() {
+  new_fixture
+  git -C "$main" worktree add -q -b feature/c "$main/.claude/worktrees/c"
+  write_old_thread c-thing in-progress feature/c "MARKER-OLD"
+  run_hook "$main/.claude/worktrees/c"
+  assert_contains "----- $old_threads/c-thing.md -----"
+}
+
+test_new_folder_wins_over_old_file_with_same_slug() {
+  new_fixture
+  write_old_thread a-thing in-progress feature/a "MARKER-OLD"
+  write_thread a-thing in-progress feature/a "MARKER-NEW"
+  touch -t 202601010000 "$threads/a-thing.md"
+  touch -t 202602010000 "$old_threads/a-thing.md"
+  run_hook "$base/wt-a"
+  assert_contains "MARKER-NEW"
+  assert_not_contains "MARKER-OLD"
+  assert_not_contains "Other open threads on this branch"
+}
+
+test_old_file_with_same_slug_as_done_new_file_is_ignored() {
+  new_fixture
+  new_session_worktree
+  write_old_thread a-thing in-progress feature/a "STEP-OLD"
+  write_thread a-thing done feature/a "STEP-NEW"
+  run_hook "$base/wt-new"
+  assert_exit_0
+  assert_empty
+}
+
+test_list_names_file_of_old_folder_thread() {
+  new_fixture
+  new_session_worktree
+  write_thread new-thing in-progress feature/x "STEP-NEW"
+  write_old_thread old-thing in-progress feature/y "STEP-OLD"
+  run_hook "$base/wt-new"
+  [ "$(count_listed)" -eq 2 ] || fail "expected 2 listed threads, got $(count_listed)"
+  assert_contains "Their handoff files are in $threads."
+  assert_line "- old-thing " "Next step: STEP-OLD. Its file is $old_threads/old-thing.md (old location)."
+  assert_line_lacks "- new-thing " "old location"
+}
+
+test_old_folder_overview_loads_in_main_checkout() {
+  new_fixture
+  threads="$old_threads"
+  write_overview in-progress "OVERVIEW-OLD"
+  run_hook "$main"
+  assert_contains "----- $old_threads/_overview.md -----"
+  assert_contains "This is the orchestrator's session"
+}
+
+test_new_folder_overview_wins_over_old_one() {
+  new_fixture
+  write_overview done "OVERVIEW-NEW"
+  local new="$threads"
+  threads="$old_threads"
+  write_overview in-progress "OVERVIEW-OLD"
+  threads="$new"
+  run_hook "$main"
   assert_exit_0
   assert_empty
 }

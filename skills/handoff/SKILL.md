@@ -1,20 +1,28 @@
 ---
 name: handoff
-description: Write or update this thread's handoff file in docs/handoffs/ in the repo's main checkout (or, for an orchestrator session, docs/handoffs/_overview.md) so the next Claude Code session, in any worktree of the repo, can continue this work from a clean context. Use when the user says handoff, wrap up, save progress, or before /clear on unfinished work, when a task or part of a plan is finished and the rest continues in a new session, or when a hook asks for a handoff.
+description: Write or update this thread's handoff file in the repo's handoffs folder in ~/.claude/handoffs/ (or, for an orchestrator session, its _overview.md) so the next Claude Code session, in any worktree of the repo, can continue this work from a clean context. Use when the user says handoff, wrap up, save progress, or before /clear on unfinished work, when a task or part of a plan is finished and the rest continues in a new session, or when a hook asks for a handoff.
 ---
 
 # Handoff
 
 Write the state of the current work to this thread's handoff file, so a fresh session can pick it up without re-reading this conversation. Then give the user a prompt to paste into that session.
 
-A **thread** is one line of work with a goal (for example "best score"); it may span several branches, one per PR of a plan. Each thread has one file, `docs/handoffs/<slug>.md`, in the repo's **main checkout**, the same folder from every worktree of the repo. Find the main checkout with these commands (they work from anywhere inside the current checkout), first case that applies:
+A **thread** is one line of work with a goal (for example "best score"); it may span several branches, one per PR of a plan. Each thread has one file, `<slug>.md`, in the repo's **handoffs folder**, the same folder from every worktree of the repo. It is outside the repo: a file inside a linked worktree is deleted with the worktree, and Claude Code refuses writes from a desktop-app worktree (`.claude/worktrees/<name>`) into the main checkout. Print its path with this one command, run in a single Bash call from anywhere inside the current checkout:
 
-1. `common=$(git rev-parse --path-format=absolute --git-common-dir)`. If it equals `git rev-parse --path-format=absolute --git-dir`, this is the main checkout: `git rev-parse --show-toplevel`.
-2. `git --git-dir="$common" config core.worktree` prints a value (a linked worktree of a submodule): the main checkout is `git --git-dir="$common" rev-parse --show-toplevel`.
-3. `common` ends in `/.git` (a linked worktree of a normal repo): the main checkout is its parent directory.
-4. Otherwise (a linked worktree of a `--separate-git-dir` repo) there is no main checkout to use: tell the user the handoff cannot be shared across worktrees and ask where to write it.
+```bash
+common=$(git rev-parse --path-format=absolute --git-common-dir)
+if [ "$common" = "$(git rev-parse --path-format=absolute --git-dir)" ]; then main=$(git rev-parse --show-toplevel)
+elif [ -n "$(git --git-dir="$common" config core.worktree)" ]; then main=$(git --git-dir="$common" rev-parse --show-toplevel)
+elif [ "${common##*/}" = .git ]; then main=${common%/.git}
+else main=""; fi
+[ -n "$main" ] && echo "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/handoffs/$(printf '%s' "$main" | LC_ALL=C tr -c 'A-Za-z0-9' '-')"
+```
 
-Never write a handoff inside a linked worktree: it is deleted with the worktree. Not a git repo: use `docs/handoffs/<slug>.md` in the current folder.
+It finds the main checkout (this checkout, the submodule's checkout for a linked worktree of a submodule, or the parent of the common `.git`) and names the folder after its path, every byte other than a letter or digit replaced by `-`, as the SessionStart hook does: `/Users/me/Developer/app` gives `~/.claude/handoffs/-Users-me-Developer-app`. If it prints nothing (a linked worktree of a `--separate-git-dir` repo), there is no main checkout to use: tell the user the handoff cannot be shared across worktrees and ask where to write it. Moving or renaming the main checkout changes the name, so its threads stay in the folder of the old path.
+
+**Old folder**: thread files used to live in `<main checkout>/docs/handoffs/`. The hook still loads and lists them, and names their path. To update one, write it to the handoffs folder under the same slug and leave the old file alone: the hook ignores it from then on. Never write new files there.
+
+Never write a handoff inside a linked worktree. If a write to the handoffs folder is refused, do not work around it through Bash: tell the user and ask where to write. Not a git repo: use `docs/handoffs/<slug>.md` in the current folder.
 
 ## Rules
 
@@ -33,16 +41,15 @@ Never write a handoff inside a linked worktree: it is deleted with the worktree.
 
 If this session is the orchestrator, write `_overview.md` (see Orchestrator below). Otherwise, the first that applies:
 
-1. The thread file in `docs/handoffs/` that the SessionStart hook loaded (not merely listed) and this session continued, or that the user asked this session to continue. This holds after you switched to a new branch too.
+1. The thread file (in the handoffs folder or the old folder) that the SessionStart hook loaded (not merely listed) and this session continued, or that the user asked this session to continue. This holds after you switched to a new branch too.
 2. An in-progress thread file whose `Branch:` is the current branch (the newest, if several), only if this session worked on that thread's goal.
-3. A new file. Slug: kebab-case `[a-z0-9-]` from the task name (`best-score`), never from the branch. If `<slug>.md` already exists, it belongs to another thread (done or not): use `<slug>-2`, `<slug>-3`, ..., the first that is free.
+3. A new file. Slug: kebab-case `[a-z0-9-]` from the task name (`best-score`), never from the branch. If `<slug>.md` already exists in the handoffs folder or the old folder, it belongs to another thread (done or not): use `<slug>-2`, `<slug>-3`, ..., the first that is free.
 
 ## Before writing
 
 1. Check `git status` and `git diff --stat` so "Done" reflects what actually changed.
-2. Create `<main checkout>/docs/handoffs/` if it does not exist.
-3. Keep handoffs out of the repo: if `git check-ignore -q docs/handoffs/` (run at the root of the current checkout) fails, append the line `docs/handoffs/` to `<git common dir>/info/exclude` (local, shared by all worktrees, never committed). Do not edit `.gitignore` unless the user asks. Not a git repo: skip this.
-4. **Legacy file**: if the current checkout has `docs/handoff.md` (the old single-file handoff) for the same work, for example because the hook loaded it, carry its still-relevant content (decisions, gotchas, next steps) into the file you write, then delete `docs/handoff.md`. If it describes other unfinished work, leave it.
+2. The Write tool creates the handoffs folder if it does not exist.
+3. **Legacy file**: if the current checkout has `docs/handoff.md` (the old single-file handoff) for the same work, for example because the hook loaded it, carry its still-relevant content (decisions, gotchas, next steps) into the file you write, then delete `docs/handoff.md`. If it describes other unfinished work, leave it.
 
 ## Format
 
@@ -75,7 +82,7 @@ One or two sentences: what we are building or fixing, and what "done" looks like
 
 ## Orchestrator
 
-The orchestrator is a session that coordinates worker sessions in other worktrees; it usually runs in the main checkout, and the hook loaded `_overview.md` for it. It writes `<main checkout>/docs/handoffs/_overview.md` instead of a thread file, and reads the workers' thread files for their state but never edits them. Worker sessions never write `_overview.md`. The orchestrator does not run `spec-first`'s build loop itself; the workers do. The Rules above apply; Status is `done` when every thread is merged or dropped.
+The orchestrator is a session that coordinates worker sessions in other worktrees; it usually runs in the main checkout, and the hook loaded `_overview.md` for it. It writes `_overview.md` in the handoffs folder instead of a thread file, and reads the workers' thread files for their state but never edits them. Worker sessions never write `_overview.md`. The orchestrator does not run `spec-first`'s build loop itself; the workers do. The Rules above apply; Status is `done` when every thread is merged or dropped.
 
 ```markdown
 # Overview: <short goal>
