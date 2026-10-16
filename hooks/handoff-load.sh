@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # SessionStart hook: load this session's handoff into the new session's context.
-# Thread files live in <main checkout>/docs/handoffs/<slug>.md, shared by every worktree;
-# the one whose Branch: is the current branch is loaded. Otherwise the orchestrator's
-# _overview.md (main checkout only) and docs/handoff.md in the session folder (legacy) are
-# loaded, followed by a list of the open threads to choose from. After compaction only a
-# branch match is loaded.
+# Thread files live in <config dir>/handoffs/<key>/<slug>.md, <key> being the main checkout's
+# path, shared by every worktree and outside the repo (a desktop-app worktree may not write into
+# the main checkout). Files in the old folder, <main checkout>/docs/handoffs/, still count unless
+# the new folder has one with the same name. The one whose Branch: is the current branch is
+# loaded. Otherwise the orchestrator's _overview.md (main checkout only) and docs/handoff.md in
+# the session folder (legacy) are loaded, followed by a list of the open threads to choose from.
+# After compaction only a branch match is loaded.
 # Plain stdout from a SessionStart hook is added to Claude's context.
 set -euo pipefail
 
@@ -89,24 +91,37 @@ main_checkout() {
   # recorded where we can find it. Out of scope: no thread files.
 }
 
-# Thread files sit in the main checkout, found through the git common dir. Not a git repo: none.
+# handoffs_dir <main checkout>: its thread folder, <config dir>/handoffs/<path with every byte
+# other than a letter or digit replaced by ->. The skill builds the same name.
+handoffs_dir() {
+  printf '%s/handoffs/%s' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}" "$(printf '%s' "$1" | LC_ALL=C tr -c 'A-Za-z0-9' '-')"
+}
+
+# The thread folders belong to the main checkout, found through the git common dir. Not a git
+# repo: none.
 threads=""
+old_threads=""
 branch=""
 main_dir=""
 if common=$(git -C "$dir" rev-parse --path-format=absolute --git-common-dir 2>/dev/null); then
   main_dir=$(main_checkout "$dir" "$(git -C "$dir" rev-parse --path-format=absolute --git-dir 2>/dev/null || true)" "$common")
-  if [ -n "$main_dir" ]; then threads="$main_dir/docs/handoffs"; fi
+  if [ -n "$main_dir" ]; then
+    threads=$(handoffs_dir "$main_dir")
+    old_threads="$main_dir/docs/handoffs"
+  fi
   branch=$(git -C "$dir" branch --show-current 2>/dev/null || true)
 fi
 
 # In-progress thread files (never the overview), one "<mtime><TAB><path>" line each: all of
-# them, and those whose Branch: is the current branch.
+# them, and those whose Branch: is the current branch. An old-folder file is skipped when the
+# new folder has the same name: a session that updated the thread wrote it there.
 open=""
 matches=""
-if [ -d "$threads" ]; then
-  for f in "$threads"/*.md; do
+if [ -n "$threads" ]; then
+  for f in "$threads"/*.md "$old_threads"/*.md; do
     [ -f "$f" ] && [ -r "$f" ] || continue
     [ "$(basename "$f")" = "_overview.md" ] && continue
+    if [ "${f%/*}" = "$old_threads" ] && [ -e "$threads/${f##*/}" ]; then continue; fi
     [ "$(status_of "$f")" = "done" ] && continue
     m=$(mtime_of "$f")
     open="$open$m"$'\t'"$f"$'\n'
@@ -134,12 +149,15 @@ fi
 # After compaction the session already knows its work: no overview, legacy file or list.
 if [ "$source" = "compact" ]; then exit 0; fi
 
-# The orchestrator's overview: only in the main checkout (its git dir is the common dir), unless done.
+# The orchestrator's overview: only in the main checkout (its git dir is the common dir), unless
+# done. The new folder's overview wins over the old folder's.
 overview=""
-if [ -n "$threads" ] && [ -f "$threads/_overview.md" ] && [ -r "$threads/_overview.md" ] &&
+candidate="$threads/_overview.md"
+if [ ! -e "$candidate" ]; then candidate="$old_threads/_overview.md"; fi
+if [ -n "$threads" ] && [ -f "$candidate" ] && [ -r "$candidate" ] &&
   [ "$(git -C "$dir" rev-parse --path-format=absolute --git-dir 2>/dev/null || true)" = "$common" ] &&
-  [ "$(status_of "$threads/_overview.md")" != "done" ]; then
-  overview="$threads/_overview.md"
+  [ "$(status_of "$candidate")" != "done" ]; then
+  overview="$candidate"
 fi
 
 # ask_orchestrator: the one question for the orchestrator's session, replacing the generic ones.
@@ -204,6 +222,7 @@ printf '%s' "$open" | sort -t $'\t' -k1,1nr -k2,2 | awk 'NR <= 10' | while IFS=$
   step=$(next_step_of "$f")
   step=${step%.}
   line="- $slug (branch ${b:-not set; ask the user which branch}, updated $(( (now - m) / 86400 )) day(s) ago). Next step: ${step:-none listed}."
+  if [ "${f%/*}" = "$old_threads" ]; then line="$line Its file is $f (old location)."; fi
   held=""
   if [ -n "$b" ]; then
     held=$(printf '%s\n' "$worktrees" | B="$b" awk -F '\t' '$1 == ENVIRON["B"]')
