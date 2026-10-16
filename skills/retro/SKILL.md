@@ -16,7 +16,7 @@ The goal is that a human never writes the same review comment twice.
 
 1. **Read the session.** Run the digest in this skill's folder:
    ```bash
-   python3 ~/.claude/skills/retro/digest.py [session-id or path]
+   python3 "${CLAUDE_SKILL_DIR}/digest.py" [session-id or path]
    ```
    With no argument it takes this session. The user may name another one. If this session is already long, suggest running `/retro` from a fresh session on this one's id instead. The digest lists subagents at the end: digest the ones with errors too. Open the raw `.jsonl` only to read a specific moment the digest points at.
 2. **Read the PR review**, when the user names a PR or the session opened one:
@@ -38,14 +38,14 @@ The goal is that a human never writes the same review comment twice.
    - **Moment**: time from the digest and a one-line quote or description;
    - **Cause**: what in the environment allowed it;
    - **Change**: the target file and the exact rule text, check or pointer to add, change or delete.
-7. **Stop and let the user pick.** Apply only what they choose. Changes to skills, agents or the reviewer checklist go through a worktree as `~/Developer/claude-skills/CLAUDE.md` describes; changes to a project go on a branch per its rules.
+7. **Stop and let the user pick.** Apply only what they choose. Changes to skills, agents or the reviewer checklist go through a worktree as `~/Developer/claude-skills/CLAUDE.md` describes; when they came from the `marcin-skills` plugin, propose them as an issue or pull request on github.com/marcin-urbanski/claude-skills instead, since an update replaces the plugin's folder. Changes to a project go on a branch per its rules.
 
 ## Where a fix belongs
 
 | What happened | Fix | Where |
 |---|---|---|
 | A mistake a tool could catch (banned API, import shape, file location, naming pattern, formatting) | Automated check | The project's linter or static analysis rule, a pre-commit hook, a CI job, or a Claude Code hook in `.claude/settings.json` |
-| The reviewer missed a judgement call specific to this project | Rule | The project's `CODING_STANDARDS.md` (create it from `~/.claude/skills/spec-first/coding-standards-template.md` if missing) |
+| The reviewer missed a judgement call specific to this project | Rule | The project's `CODING_STANDARDS.md` (create it from `${CLAUDE_SKILL_DIR}/../spec-first/coding-standards-template.md` if missing) |
 | The reviewer missed a judgement call that applies to every project | Rule | `skills/spec-first/reviewer-checklist.md` in claude-skills |
 | A long search for a file, command or fact | Navigation pointer | One line in a file the agent already reads (`CLAUDE.md`, a skill), naming where the thing lives |
 | A skill or agent did the wrong thing, or skipped a step | Skill fix | The skill or agent file in claude-skills |
@@ -63,6 +63,6 @@ Prefer a check over prose: a failing check holds every time, a sentence holds wh
 - State the target behaviour ("store money as integer cents"); a prohibition alone puts the wrong behaviour in front of the model.
 - One meaning in one place: when a rule already exists, sharpen it instead of adding a second one.
 - Cut what the environment already says (config, scripts, directory layout); restate only what the agent cannot find by looking.
-- A rule for `CODING_STANDARDS.md` follows `~/.claude/skills/spec-first/coding-standards-template.md`: its format, when a rule may go under From evidence (otherwise tell the user it is a one-off and propose no rule), and which rule a new one replaces once the file is full; show the user both texts.
+- A rule for `CODING_STANDARDS.md` follows `${CLAUDE_SKILL_DIR}/../spec-first/coding-standards-template.md`: its format, when a rule may go under From evidence (otherwise tell the user it is a one-off and propose no rule), and which rule a new one replaces once the file is full; show the user both texts.
 - When a finding matches an existing rule, propose sharpening that rule and raising its count, not a second rule. A rule the reviewer applied and still missed needs narrower wording, not more words.
 - A retro sees one session, so it cannot tell whether an old rule or check is obsolete. Flag a line for deletion only when this session shows it changed nothing.

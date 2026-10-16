@@ -1,6 +1,6 @@
 # Evals
 
-Cases for `claude plugin eval`. Each case runs in a clean, isolated Claude Code, once with this repo loaded as a plugin (all skills and agents) and once without it, and the report shows the difference: what the skills add over the user's rules (see below). Unlike the subagent tests in `CLAUDE.md`, nothing else from the user's setup (other skills, memory, the rest of CLAUDE.md) is in context.
+Cases for `claude plugin eval`. Each case runs in a clean, isolated Claude Code, once with this repo loaded as a plugin (all skills, agents and hooks) and once without it, and the report shows the difference: what the skills add over the user's rules (see below). Unlike the subagent tests in `CLAUDE.md`, nothing else from the user's setup (other skills, memory, the rest of CLAUDE.md) is in context.
 
 ## Run
 

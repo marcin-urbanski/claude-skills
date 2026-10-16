@@ -32,7 +32,7 @@ The first two hooks belong to `handoff`.
 - [`handoff-load.sh`](hooks/handoff-load.sh) (SessionStart) loads the thread whose `Branch:` matches the current branch, from any worktree of the repo. Otherwise it lists the open threads (slug, branch, age, next step) so Claude can ask which one to continue, and warns when a thread's branch is checked out in another worktree. In the main checkout it also loads `_overview.md` for the orchestrator. It still reads an old `docs/handoff.md`, skips anything marked `done`, and after compaction loads only a branch match. When the handoff continues a plan in `docs/plans/`, it also tells Claude to invoke `spec-first` first.
 - [`handoff-nudge.sh`](hooks/handoff-nudge.sh) (Stop) asks Claude to write this thread's handoff once the session transcript passes about 2.5 MB. Change the limit with `HANDOFF_NUDGE_BYTES`.
 
-They need `jq`. Register them in `~/.claude/settings.json`:
+They need `jq`. The plugin registers them for you; for a manual install, register them in `~/.claude/settings.json`:
 
 ```json
 {
@@ -70,6 +70,27 @@ A skill call is easy to miss in the chat. This inline hook (no script needed) pr
 - [`skill-usage.py`](scripts/skill-usage.py) reads the local transcripts in `~/.claude/projects` and reports, per session, which skills the main session and its subagents invoked, next to the number of code edits and commits. Bash commands that write code files (`>`, `tee`, `sed -i`, Python writes) count as edits. Use it to check whether the skills are actually used: `scripts/skill-usage.py TimeTracker --since 2026-10-05T07:31` (UTC; a plain date works too). Tests: `python3 -m unittest discover -s tests -p 'test_*.py'`.
 
 ## Install
+
+### As a plugin
+
+Install every skill, both subagents and the `handoff` hooks in one step, from a Claude Code session (2.1.275 or later):
+
+```
+/plugin install marcin-skills --marketplace marcin-urbanski/claude-skills
+```
+
+Or from a terminal:
+
+```bash
+claude plugin marketplace add marcin-urbanski/claude-skills
+claude plugin install marcin-skills@marcin-skills
+```
+
+Restart Claude Code afterwards. Plugin skills are namespaced, for example `/marcin-skills:tdd`. To get new commits, run `claude plugin update marcin-skills@marcin-skills`, or turn on auto-update for the marketplace under `/plugin` → Marketplaces. The hooks use `jq`: without it the nudge never fires and the load hook cannot tell a compaction from a fresh start.
+
+### Single skills
+
+Some skills lean on others: `spec-first` delegates to the `implementer` and `reviewer` subagents and points them at `tdd` and `verification-before-completion`, and `handoff` works best with its two hooks. Install those together.
 
 Clone the repo and link the skills you want into your personal skills folder:
 
