@@ -36,7 +36,7 @@ Leave out how someone likes to work, one-off tasks, and anything the code, READM
 
 When the user asks, or when a task in this conversation looks recurring (a client request, a periodic job) or a failure was fixed after a non-obvious diagnosis. In those last two cases offer it in one line and write nothing unless the user agrees.
 
-1. List the existing procedures with `grep -H -m1 '^description:' .claude/skills/playbook-*/SKILL.md`. If one covers the same request or symptom, update it instead of adding a second one.
+1. List the existing procedures with `grep -H -m1 '^description:' .claude/skills/playbook-*/SKILL.md`. If one covers the same request or symptom, update it instead of adding a second one. If there are none, offer in one line, after saving, to seed the rest of the playbook from git and past conversations (Mode 2).
 2. Check whether the code already does the job (a report class, a console command, a script). If it does, the procedure points to it; if the manual way and the code differ (one handles refunds, the other does not), write that down as a TODO.
 3. Fill the template from this conversation: the final commands that worked, not the failed attempts. A failed attempt that teaches something goes under Pitfalls.
 4. Write the description from the requester's or the symptom's words ("the client asks for the monthly sales export", "the import fails with Lock wait timeout"), in at most about 300 characters, with no `<` or `>`.
@@ -48,13 +48,13 @@ When the user asks, or when a task in this conversation looks recurring (a clien
 
 When the project has no `playbook-*` procedure yet and the user wants one. Transcripts are stored only on the machine where the conversations ran, so the project's owner runs this on their own computer. Anyone else can seed from git alone (skip step 1).
 
-1. **Conversations.** From inside the repo run `python3 "${CLAUDE_SKILL_DIR}/history.py" --list`. It finds this repo's sessions, its worktrees included, oldest first. Tell the user the date range it covers, and that Claude Code deletes transcripts older than `cleanupPeriodDays` (30 days by default), which they can raise in `~/.claude/settings.json` to keep more history next time. Do not change it yourself.
+1. **Conversations.** From inside the repo run `python3 "${CLAUDE_SKILL_DIR}/history.py" --list`. It finds this repo's sessions, oldest first, including worktrees inside the repo; sessions of a worktree next to the repo that has since been removed are skipped. Tell the user the date range it covers, and that Claude Code deletes transcripts older than `cleanupPeriodDays` (30 days by default), which they can raise in `~/.claude/settings.json` to keep more history next time. Do not change it yourself.
 2. **Git.** Read the fixes of the last year and closed bugs. Fix commits often hold the exact error text a session does not show.
    ```bash
    git log --since=12.months --date=short --format='%h %ad %s' -i -E --grep='^(fix|hotfix|revert)'
    gh issue list --state closed --limit 100 --search "label:bug"   # only when the repo has a GitHub remote
    ```
-3. **Scan.** Up to 8 sessions: run `history.py <session IDs>` and read the digest yourself. More: split the IDs into batches of about 8 and give each batch to a `general-purpose` subagent, all in one message so they run in parallel, with the batch prompt below. A digest averages about 25 KB per session, so batches keep each context small.
+3. **Scan.** Up to 3 sessions: run `history.py <session IDs>` and read the digest yourself. More: split the IDs into batches of about 8 and give each batch to a `general-purpose` subagent, all in one message so they run in parallel, with the batch prompt below. A digest averages about 25 KB per session, so batches keep each context small.
 4. **Merge.** A recurring task is one asked for in at least two sessions. A known failure is one that was fixed, in a session or a fix commit; when a fix commit and a session describe the same failure, they are one candidate. A fix commit about the subject of another candidate (the export it belongs to) becomes a Pitfall of that candidate. Drop one-offs, feature work and anything the project map or a procedure already covers.
 5. **Let the owner choose.** Show a numbered list: kind (task or failure), proposed name, the request or symptom in one line, sources (session dates, commit hashes) and risk. Write only the ones the owner picks, following Mode 1 steps 2 to 6, with the digest and git as "this conversation" and `Last verified` set to the date of the last session or commit that shows it working.
 6. Write the project map if there is none.

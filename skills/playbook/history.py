@@ -6,6 +6,8 @@ Usage, from anywhere inside the repo:
     history.py <session-id>...     # what the user asked and which commands ran, per session
 
 Only the user's prompts, shell commands (marked [failed] when they errored) and edited file paths are printed.
+Sessions of a sibling worktree that has since been removed cannot be told apart from another project, so they are
+skipped; nested worktrees (`.claude/worktrees/...`) are kept.
 Tool results, command output and Claude's own text are never printed, because they are where query results
 and client data live. Obvious secrets in commands (passwords, tokens, credentials in URLs) are redacted.
 """
@@ -28,12 +30,18 @@ PASTED = re.compile(r"<pasted_content\b[^>]*>.*?</pasted_content\b[^>]*>", re.S)
 TAGS = re.compile(r"</?(?:bash-input|command-name|command-message|command-args)>")
 EDIT_TOOLS = {"Edit": "edit", "MultiEdit": "edit", "Write": "write", "NotebookEdit": "edit"}
 SECRETS = [
-    (re.compile(r"(\b(?:mysql|mysqldump|mysqladmin|mariadb)\b[^\n|;&]*?\s-p)(?!\s)\S+"), r"\1[redacted]"),
+    (re.compile(r"(\b(?:mysql|mysqldump|mysqladmin|mariadb)\b[^\n|;&]*?\s-p)(?:'[^']*'|\"[^\"]*\"|(?!\s)\S+)"),
+     r"\1[redacted]"),
+    (re.compile(r"(\bcurl\b[^\n|;&]*?\s(?:-u|--user)[\s=]+[^\s:]+:)\S+"), r"\1[redacted]"),
+    (re.compile(r"(\bsshpass\s+-p\s*)\S+"), r"\1[redacted]"),
     (re.compile(r"(?i)((?:pass(?:word|wd)?|secret|token|api[_-]?key)\w*\s*[=:]\s*)([\"']?)[^\s\"']+"),
      r"\1\2[redacted]"),
     (re.compile(r"(?i)(bearer\s+)\S+"), r"\1[redacted]"),
     (re.compile(r"(://[^/\s:@]+:)[^@\s/]+@"), r"\1[redacted]@"),
+    (re.compile(r"://[^/\s:@]+@"), "://[redacted]@"),
 ]
+# What Claude Code writes after /compact: Claude's own summary of the session, built from tool results.
+COMPACT_SUMMARY = "This session is being continued from a previous conversation"
 
 
 def project_key(path):
@@ -124,14 +132,16 @@ def digest(path):
         content = (entry.get("message") or {}).get("content")
         if not content:
             continue
+        if entry.get("isCompactSummary") or entry.get("isVisibleInTranscriptOnly"):
+            continue
         if entry.get("type") == "user" and not entry.get("isMeta"):
             if isinstance(content, list):
                 for block in content:
                     if (isinstance(block, dict) and block.get("type") == "tool_result" and block.get("is_error")
                             and block.get("tool_use_id") in command_line):
                         lines[command_line[block["tool_use_id"]]] += " [failed]"
-            text = user_text(content)
-            if text:
+            text = redact(user_text(content))
+            if text and not text.startswith(COMPACT_SUMMARY):
                 lines.append(f"USER: {short(text, USER_LIMIT)}")
         elif entry.get("type") == "assistant" and isinstance(content, list):
             for block in content:

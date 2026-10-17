@@ -64,9 +64,10 @@ class DigestTest(unittest.TestCase):
             assistant(call("Bash", command="mysql shop -e 'select email from customers'")),
             result("jan.kowalski@example.com"),
             assistant(call("Bash", "t2", command="php artisan import:run")),
-            result("Connection refused for jan.kowalski@example.com", "t2", error=True),
+            result("Connection refused for jan.kowalski@example.com, token sk_live_9xQ", "t2", error=True),
         )
         self.assertNotIn("kowalski", out)
+        self.assertNotIn("sk_live_9xQ", out)
 
     def test_marks_failed_commands(self):
         out = self.digest_of(
@@ -108,6 +109,33 @@ class DigestTest(unittest.TestCase):
         self.assertNotIn("kowalski", out)
         self.assertIn("USER: export this [pasted text] please", out)
         self.assertEqual(out.count("USER:"), 1)
+
+    def test_drops_compact_summaries(self):
+        out = self.digest_of(
+            user("Summary: customer kowalski owes 1200", isCompactSummary=True),
+            user("Summary of kowalski", isVisibleInTranscriptOnly=True),
+            user("This session is being continued from a previous conversation that ran out of context. kowalski"),
+        )
+        self.assertNotIn("kowalski", out)
+
+    def test_redacts_secrets_the_user_typed(self):
+        out = self.digest_of(
+            user("<bash-input>mysql -u root -pS3cretPw shop</bash-input>"),
+            user("use DB_PASSWORD=hunter2 for staging"),
+        )
+        self.assertNotIn("S3cretPw", out)
+        self.assertNotIn("hunter2", out)
+        self.assertIn("mysql -u root -p[redacted] shop", out)
+
+    def test_redacts_other_common_secret_forms(self):
+        out = self.digest_of(
+            assistant(call("Bash", command="curl -u admin:Hunter2 https://x")),
+            assistant(call("Bash", command="sshpass -p sshPw9 ssh h")),
+            assistant(call("Bash", command="git clone https://ghp_abcdef@github.com/x/y")),
+            assistant(call("Bash", command="mysql -p'S3c ret' db")),
+        )
+        for secret in ("Hunter2", "sshPw9", "ghp_abcdef", "S3c", "ret'"):
+            self.assertNotIn(secret, out)
 
     def test_lists_edited_files(self):
         out = self.digest_of(assistant(call("Edit", file_path="/repo/app/Jobs/Import.php")))
