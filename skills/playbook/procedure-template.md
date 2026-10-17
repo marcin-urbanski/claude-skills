@@ -6,9 +6,9 @@ description: <When to use it, in the words the request or the symptom arrives in
 # <Title>
 
 Kind: recurring task | known failure
-Risk: read-only | changes data | production
+Risk: read-only | changes data | production  (the highest that applies; production means it writes to production)
 Owner: <who knows this best>
-Last verified: <YYYY-MM-DD>
+Last verified: <YYYY-MM-DD, the date it last worked>
 
 ## When
 
@@ -22,7 +22,7 @@ Last verified: <YYYY-MM-DD>
    ```bash
    <command, or a pointer to the file that holds the query>
    ```
-2. **changes data** <A step that writes, deletes or migrates is marked like this.>
+2. **writes data** <A step that writes, deletes or migrates is marked like this; one that uploads, emails or otherwise sends data outside the team is marked **sends data out**.>
 
 ## Symptom
 
