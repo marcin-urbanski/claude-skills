@@ -133,8 +133,11 @@ class DigestTest(unittest.TestCase):
             assistant(call("Bash", command="sshpass -p sshPw9 ssh h")),
             assistant(call("Bash", command="git clone https://ghp_abcdef@github.com/x/y")),
             assistant(call("Bash", command="mysql -p'S3c ret' db")),
+            assistant(call("Bash", command="curl -uadmin:NoSpace1 https://x")),
+            assistant(call("Bash", command="curl -u \"admin:Quo ted2\" https://x")),
+            assistant(call("Bash", command="sshpass -p \"ssh Quoted3\" ssh h")),
         )
-        for secret in ("Hunter2", "sshPw9", "ghp_abcdef", "S3c", "ret'"):
+        for secret in ("Hunter2", "sshPw9", "ghp_abcdef", "S3c", "ret'", "NoSpace1", "Quo", "ted2", "Quoted3"):
             self.assertNotIn(secret, out)
 
     def test_lists_edited_files(self):

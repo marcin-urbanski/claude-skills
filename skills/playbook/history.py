@@ -9,7 +9,7 @@ Only the user's prompts, shell commands (marked [failed] when they errored) and 
 Sessions of a sibling worktree that has since been removed cannot be told apart from another project, so they are
 skipped; nested worktrees (`.claude/worktrees/...`) are kept.
 Tool results, command output and Claude's own text are never printed, because they are where query results
-and client data live. Obvious secrets in commands (passwords, tokens, credentials in URLs) are redacted.
+and client data live. Obvious secrets in prompts and commands (passwords, tokens, credentials in URLs) are redacted.
 """
 import glob
 import json
@@ -32,12 +32,13 @@ EDIT_TOOLS = {"Edit": "edit", "MultiEdit": "edit", "Write": "write", "NotebookEd
 SECRETS = [
     (re.compile(r"(\b(?:mysql|mysqldump|mysqladmin|mariadb)\b[^\n|;&]*?\s-p)(?:'[^']*'|\"[^\"]*\"|(?!\s)\S+)"),
      r"\1[redacted]"),
-    (re.compile(r"(\bcurl\b[^\n|;&]*?\s(?:-u|--user)[\s=]+[^\s:]+:)\S+"), r"\1[redacted]"),
-    (re.compile(r"(\bsshpass\s+-p\s*)\S+"), r"\1[redacted]"),
+    (re.compile(r"(\bcurl\b[^\n|;&]*?\s(?:-u|--user)[\s=]*)(?:'[^']*'|\"[^\"]*\"|\S+)"), r"\1[redacted]"),
+    (re.compile(r"(\bsshpass\s+-p\s*)(?:'[^']*'|\"[^\"]*\"|\S+)"), r"\1[redacted]"),
     (re.compile(r"(?i)((?:pass(?:word|wd)?|secret|token|api[_-]?key)\w*\s*[=:]\s*)([\"']?)[^\s\"']+"),
      r"\1\2[redacted]"),
     (re.compile(r"(?i)(bearer\s+)\S+"), r"\1[redacted]"),
     (re.compile(r"(://[^/\s:@]+:)[^@\s/]+@"), r"\1[redacted]@"),
+    # A token alone before @ looks like a user name, so plain user names in URLs are hidden too, on purpose.
     (re.compile(r"://[^/\s:@]+@"), "://[redacted]@"),
 ]
 # What Claude Code writes after /compact: Claude's own summary of the session, built from tool results.

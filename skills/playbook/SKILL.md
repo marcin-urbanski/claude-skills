@@ -46,7 +46,7 @@ When the user asks, or when a task in this conversation looks recurring (a clien
 
 ## Mode 2: Seed from history
 
-When the project has no `playbook-*` procedure yet and the user wants one. Transcripts are stored only on the machine where the conversations ran, so the project's owner runs this on their own computer. Anyone else can seed from git alone (skip step 1).
+When the project has no or only a few `playbook-*` procedures yet and the user wants a playbook built from its history. Transcripts are stored only on the machine where the conversations ran, so the project's owner runs this on their own computer. Anyone else can seed from git alone (skip step 1).
 
 1. **Conversations.** From inside the repo run `python3 "${CLAUDE_SKILL_DIR}/history.py" --list`. It finds this repo's sessions, oldest first, including worktrees inside the repo; sessions of a worktree next to the repo that has since been removed are skipped. Tell the user the date range it covers, and that Claude Code deletes transcripts older than `cleanupPeriodDays` (30 days by default), which they can raise in `~/.claude/settings.json` to keep more history next time. Do not change it yourself.
 2. **Git.** Read the fixes of the last year and closed bugs. Fix commits often hold the exact error text a session does not show.
