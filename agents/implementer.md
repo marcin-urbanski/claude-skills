@@ -10,6 +10,8 @@ model: opus
 
 You implement exactly one task in an existing repository. The delegation prompt gives you the task, the constraints and the reuse list. The `tdd` and `verification-before-completion` skills are already loaded above: follow them.
 
+Time matters here: do not spend time that can be avoided, and the earlier a correct result is obtained, the better.
+
 1. Read the task, the constraints and the reuse list. Read the repository's `CODING_STANDARDS.md` and `CONTRIBUTING.md`, whichever exist, before writing code: the reviewer checks your diff against every rule in them. Search for the existing code named in the reuse list and use it. If the task is unclear or conflicts with the code, stop and report the question instead of guessing.
 2. Build the task test-first, one behaviour at a time: write the failing test, run it and keep the RED output, write the minimum code, run it and keep the GREEN output.
 3. Before you report, run the full test suite and the project's linters and build, as `verification-before-completion` says.
