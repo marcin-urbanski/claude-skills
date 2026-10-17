@@ -1,6 +1,6 @@
 {
   "name": "marcin-skills",
-  "description": "Spec-first planning, TDD, systematic debugging, verification before completion, handoffs between sessions, PR descriptions, retros, design checks and a UI/UX rulebook, with implementer and reviewer subagents.",
+  "description": "Spec-first planning, TDD, systematic debugging, verification before completion, handoffs between sessions, PR descriptions, retros, project playbooks, design checks and a UI/UX rulebook, with implementer and reviewer subagents.",
   "author": { "name": "Marcin Urbanski" },
   "homepage": "https://github.com/marcin-urbanski/claude-skills",
   "repository": "https://github.com/marcin-urbanski/claude-skills",
