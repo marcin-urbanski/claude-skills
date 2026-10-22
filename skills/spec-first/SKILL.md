@@ -38,7 +38,7 @@ Keep it to what the user needs to approve (about 20–40 lines):
 - **Reuse**: from step 2.
 - **Approach**: files to touch, data changes, anything the user must decide.
 - **Security**: what input is untrusted, who may do this (authorisation), what data is sensitive. Write "none" only if that is true.
-- **Deeper**: what a top professional in the field would do beyond this request: the raw data they would start from, the methods or tools they would use, and the outside evidence that would show it works for users (a test, error reports, a metric, a user trying it). Two or three proposals the user can take or leave, each with "not now" as the default; none goes into the task list unless the user picks it.
+- **Deeper**: what a top professional in the field would do beyond this request: the raw data they would start from, the methods or tools they would use, and the outside evidence that would show it works for users (a test, error reports, a metric, a user trying it). Two or three proposals the user can take or leave, each with "not now" as the default; none goes into the task list or plan unless the user picks it, and a picked one becomes acceptance criteria.
 - **Out of scope**: what you will not do.
 - **Decisions needed**: the questions whose answers change the design, each with the default you take if the user only says "ok". Leave the section out when there are none.
 
@@ -55,7 +55,7 @@ Then wait for approval. After approval, give a numbered task list (each task sma
    - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2). A plan without parts is one part; number its tasks 1, 2, 3.
 3. Review the plan adversarially before anyone builds from it. Dispatch one fresh `reviewer` subagent with `plan-review-prompt.md` in this folder: it gets the spec, the plan and the repository, never your reasons for the choices, since a reviewer handed conclusions tends to confirm them. Re-read the plan and the code each finding points at, then sort it (first match wins):
    - **Spec gap**: the spec is silent, unclear or wrong → a question for the user, with your default. Gaps you found yourself while writing the plan go in the same message.
-   - **Noise**: wrong given context the reviewer lacked, or right but asking for no change → drop it from the plan, and add that context to the plan's global constraints if its absence caused the finding.
+   - **Noise**: wrong given context the reviewer lacked, or right but asking for no change → make no plan change for it, but add that context to the plan's global constraints if its absence caused the finding.
    - **Trade-off**: real, but fixing costs more than accepting → note it in the plan header and tell the user.
    - **Plan fix**: any other real finding → fix the plan.
 
@@ -103,6 +103,6 @@ Use `handoff` between sessions on epics.
    - **Fix or feature:** dispatch one `reviewer` subagent with `reviewer-prompt.md`.
    - **Epic:** an adversarial review. Dispatch three fresh `reviewer` subagents in parallel with `adversarial-review-prompt.md` in this folder, one per angle it lists, then one fresh `reviewer` with `judge-prompt.md` and their reports. The judge decides which findings stand, because a session tends to dismiss criticism of its own work.
 
-   Critical and Important findings are fixed (in an epic, by an `implementer`) and a fresh `reviewer` checks only the fix. Tell the user every finding you do not act on, with the reason in one line; never drop one silently.
+   Critical and Important findings (in an epic, those the judge says stand) are fixed, in an epic by an `implementer`, and a fresh `reviewer` checks only the fix. In an epic, ask the user each of the judge's Open questions, record the answer in the spec, and treat the finding as standing or rejected accordingly; wait for the answers before the PR. Tell the user every finding you do not act on, with the reason in one line (for a rejected one, the judge's reason); never drop one silently.
 4. Walk through the acceptance criteria (for a fix, the behaviour the request asks for) one by one and say how each is met (test name or manual check).
 5. Push and open the PR with `gh pr create`, writing the body with the `pr` skill. Do not merge.

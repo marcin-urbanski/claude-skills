@@ -7,14 +7,15 @@ Judge the findings below. Do not review the branch from scratch: follow these st
 
 Repository: [absolute path]
 Approved spec: [absolute path]
+Plan: [absolute path]
 Diff: `git diff [BASE]...[HEAD]`
 
 Reports from three adversarial reviewers:
 [THE THREE REPORTS, VERBATIM]
 
 For each finding, read the code it points at and the spec, then decide:
-- Stands: its scenario happens with this code and the spec does not ask for that behaviour. Keep its severity or correct it.
-- Rejected: its scenario cannot happen (say what prevents it, with file:line), or the spec asks for this behaviour.
+- Stands: its evidence holds in this code (the scenario happens, the duplicate or broken rule is there, the weak test stays green) and neither the spec nor the plan asks for it. Keep its severity or correct it.
+- Rejected: its evidence does not hold (say what prevents it, with file:line), the spec asks for this behaviour, or the plan header records it as an accepted trade-off.
 - Open: it depends on a question the spec leaves open. Say the question.
 Merge duplicates. Add a finding of your own only if it is Critical.
 
