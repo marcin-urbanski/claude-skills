@@ -1,6 +1,6 @@
 # Reviewer subagent prompt
 
-Fill in the brackets and pass as the prompt of the `reviewer` subagent (`agents/reviewer.md` in claude-skills, which holds the review steps and the report format). One reviewer per task (epics) or one for the whole branch before the PR.
+Fill in the brackets and pass as the prompt of the `reviewer` subagent (`agents/reviewer.md` in claude-skills, which holds the review steps and the report format). One reviewer per task (epics), one for a fix's or feature's whole branch before the PR, and one to check only the fix of a finding (What was asked: the finding verbatim; Diff: the fix commits only). An epic's whole branch gets `adversarial-review-prompt.md` instead.
 
 ```
 ## What was asked

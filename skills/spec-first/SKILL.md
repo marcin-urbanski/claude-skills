@@ -38,6 +38,7 @@ Keep it to what the user needs to approve (about 20–40 lines):
 - **Reuse**: from step 2.
 - **Approach**: files to touch, data changes, anything the user must decide.
 - **Security**: what input is untrusted, who may do this (authorisation), what data is sensitive. Write "none" only if that is true.
+- **Deeper**: what a top professional in the field would do beyond this request: the raw data they would start from, the methods or tools they would use, and the outside evidence that would show it works for users (a test, error reports, a metric, a user trying it). Two or three proposals the user can take or leave, each with "not now" as the default; none goes into the task list or plan unless the user picks it, and a picked one becomes acceptance criteria.
 - **Out of scope**: what you will not do.
 - **Decisions needed**: the questions whose answers change the design, each with the default you take if the user only says "ok". Leave the section out when there are none.
 
@@ -54,11 +55,11 @@ Then wait for approval. After approval, give a numbered task list (each task sma
    - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2). A plan without parts is one part; number its tasks 1, 2, 3.
 3. Review the plan adversarially before anyone builds from it. Dispatch one fresh `reviewer` subagent with `plan-review-prompt.md` in this folder: it gets the spec, the plan and the repository, never your reasons for the choices, since a reviewer handed conclusions tends to confirm them. Re-read the plan and the code each finding points at, then sort it (first match wins):
    - **Spec gap**: the spec is silent, unclear or wrong → a question for the user, with your default. Gaps you found yourself while writing the plan go in the same message.
-   - **Noise**: wrong given context the reviewer lacked, or right but asking for no change → drop it, and add that context to the plan's global constraints if its absence caused the finding.
+   - **Noise**: wrong given context the reviewer lacked, or right but asking for no change → change no task for it, but add that context to the plan's global constraints if its absence caused the finding.
    - **Trade-off**: real, but fixing costs more than accepting → note it in the plan header and tell the user.
    - **Plan fix**: any other real finding → fix the plan.
 
-   Tell the user in a few lines what the review changed, with the spec questions. If there are questions, wait for the answers, record them in the spec and adjust the plan. Then re-review with a fresh reviewer, but only when the fixes or answers changed tasks substantially, for at most 3 reviews in total; substantive findings still left after the third go to the user. If the session ends while you wait, the handoff says the plan review is open and the spec and plan not yet committed.
+   Tell the user in a few lines what the review changed, with the spec questions, and each finding you dropped as noise with the reason in one line. If there are questions, wait for the answers, record them in the spec and adjust the plan. Then re-review with a fresh reviewer, but only when the fixes or answers changed tasks substantially, for at most 3 reviews in total; substantive findings still left after the third go to the user. If the session ends while you wait, the handoff says the plan review is open and the spec and plan not yet committed.
 4. Commit spec and plan together on the feature branch as its first commit (e.g. `docs: add spec and plan for <topic>`), with the new `CODING_STANDARDS.md` and its `CLAUDE.md` line if the epic starts them (below), before any task starts. A plan left untracked in a worktree disappears with it, and handoffs point at it; committed, any worktree gets it after `git switch <branch>`. If the project's `.gitignore` excludes the docs folder, tell the user and ask before forcing anything; never `git add -f` silently.
 
 Follow the project's CLAUDE.md for locations if it names others.
@@ -75,7 +76,7 @@ For a fix or feature, create the branch first (per global git rules); an epic al
 
 - Implementer prompt: the task text from the plan, global constraints and the reuse list. The agent's own instructions cover TDD, verification, the commit and the report.
 - Reviewer prompt: `reviewer-prompt.md` in this folder, filled in with the task, constraints and the commit range.
-- Critical or Important findings, including those from the whole-branch review, go back to the implementer; re-review only the fix. Minor findings are listed for the user.
+- Critical or Important findings, including those the judge says stand in the whole-branch review, go back to the implementer; re-review only the fix. Minor findings are listed for the user.
 - You plan, dispatch and check; every code change goes through an implementer and a reviewer, and you write no production code.
 - A product or spec question an agent raises (behaviour, copy, an existing test's assertion) goes to the user, not to another agent. Record the answer in the spec.
 - Do not trust any report: check `git diff` and the test output yourself before moving on.
@@ -98,6 +99,10 @@ Use `handoff` between sessions on epics.
 
 1. If the diff changes UI and the project has a design in `docs/design` (a Claude Design export, a Design artifact's files, mockup images or a `figma.md`), run `design-check`.
 2. `verification-before-completion`: full test suite, linters/static analysis the project uses, build if there is one. Read the output.
-3. Independent review of the whole branch, for every size: dispatch one `reviewer` subagent with `reviewer-prompt.md` against `main...HEAD`.
+3. Independent review of the whole branch, for every size, against `main...HEAD`:
+   - **Fix or feature:** dispatch one `reviewer` subagent with `reviewer-prompt.md`.
+   - **Epic:** an adversarial review. Dispatch three fresh `reviewer` subagents in parallel with `adversarial-review-prompt.md` in this folder, one per angle it lists, then one fresh `reviewer` with `judge-prompt.md` and their reports. The judge decides which findings stand, because a session tends to dismiss criticism of its own work.
+
+   Critical and Important findings (in an epic, those the judge says stand) are fixed, in an epic by an `implementer`, and a fresh `reviewer` checks only the fix. In an epic, ask the user each of the judge's Open questions, record the answer in the spec, and treat the finding as standing or rejected accordingly; wait for the answers before the PR. Tell the user every finding you do not act on, with the reason in one line (for a rejected one, the judge's reason); never drop one silently.
 4. Walk through the acceptance criteria (for a fix, the behaviour the request asks for) one by one and say how each is met (test name or manual check).
 5. Push and open the PR with `gh pr create`, writing the body with the `pr` skill. Do not merge.
