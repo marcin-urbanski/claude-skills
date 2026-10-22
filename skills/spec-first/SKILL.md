@@ -35,10 +35,11 @@ Keep it to what the user needs to approve (about 20–40 lines):
 
 - **Story**: who wants what, and why (one or two sentences).
 - **Acceptance criteria**: 3–7 checkable statements ("Given…, when…, then…" or plain bullets). These become the tests.
+- **Evidence of success**: how the user will know after release that the story's outcome happened, something passing tests can't show: one signal from outside the code (error reports, a metric, a query on real data, a user doing the task), the value that counts as success, and when to check it. Prefer a signal that already exists; add code only when none does, and only the smallest that shows the value (a log line, a stored count). This is part of the work, not a proposal, so it never goes under Deeper, Out of scope or Decisions needed, and any such code is in the task list (in an epic, a plan task). If nothing outside the code can show it, say so in one line.
 - **Reuse**: from step 2.
 - **Approach**: files to touch, data changes, anything the user must decide.
 - **Security**: what input is untrusted, who may do this (authorisation), what data is sensitive. Write "none" only if that is true.
-- **Deeper**: what a top professional in the field would do beyond this request: the raw data they would start from, the methods or tools they would use, and the outside evidence that would show it works for users (a test, error reports, a metric, a user trying it). Two or three proposals the user can take or leave, each with "not now" as the default; none goes into the task list or plan unless the user picks it, and a picked one becomes acceptance criteria.
+- **Deeper**: what a top professional in the field would do beyond this request: the raw data they would start from and the methods or tools they would use. Two or three proposals the user can take or leave, each with "not now" as the default; none goes into the task list or plan unless the user picks it, and a picked one becomes acceptance criteria.
 - **Out of scope**: what you will not do.
 - **Decisions needed**: the questions whose answers change the design, each with the default you take if the user only says "ok". Leave the section out when there are none.
 
@@ -104,5 +105,5 @@ Use `handoff` between sessions on epics.
    - **Epic:** an adversarial review. Dispatch three fresh `reviewer` subagents in parallel with `adversarial-review-prompt.md` in this folder, one per angle it lists, then one fresh `reviewer` with `judge-prompt.md` and their reports. The judge decides which findings stand, because a session tends to dismiss criticism of its own work.
 
    Critical and Important findings (in an epic, those the judge says stand) are fixed, in an epic by an `implementer`, and a fresh `reviewer` checks only the fix. In an epic, ask the user each of the judge's Open questions, record the answer in the spec, and treat the finding as standing or rejected accordingly; wait for the answers before the PR. Tell the user every finding you do not act on, with the reason in one line (for a rejected one, the judge's reason); never drop one silently.
-4. Walk through the acceptance criteria (for a fix, the behaviour the request asks for) one by one and say how each is met (test name or manual check).
-5. Push and open the PR with `gh pr create`, writing the body with the `pr` skill. Do not merge.
+4. Walk through the acceptance criteria (for a fix, the behaviour the request asks for) one by one and say how each is met (test name or manual check). For a feature or epic whose spec names a signal for evidence of success, then say how and when the user checks it.
+5. Push and open the PR with `gh pr create`, writing the body with the `pr` skill, with the evidence-of-success check from step 4 under Notes for the reviewer. Do not merge.
