@@ -26,7 +26,7 @@ They encode my way of working, and some are strict on purpose: `tdd` writes a fa
 | Subagent | What it's for |
 |---|---|
 | [implementer](agents/implementer.md) | Builds one task from a plan test-first, following the project's `CODING_STANDARDS.md`, verifies, commits, and reports RED/GREEN output. Cannot spawn subagents. |
-| [reviewer](agents/reviewer.md) | Read-only review of a diff for reuse, security, the project's own `CODING_STANDARDS.md`, tests that cannot fail, code smells and spec compliance, with a verdict and findings by severity. With [its own prompt](skills/spec-first/plan-review-prompt.md) it also reviews an epic's plan before any code is written. |
+| [reviewer](agents/reviewer.md) | Read-only review of a diff for reuse, security, the project's own `CODING_STANDARDS.md`, tests that cannot fail, code smells and spec compliance, with a verdict and findings by severity. With [its own prompt](skills/spec-first/plan-review-prompt.md) it also reviews an epic's plan before any code is written, and with the [adversarial](skills/spec-first/adversarial-review-prompt.md) and [judge](skills/spec-first/judge-prompt.md) prompts it attacks an epic's whole branch from three angles and then sorts which findings stand. |
 
 ## Hooks
 
