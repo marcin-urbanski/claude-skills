@@ -55,7 +55,7 @@ Then wait for approval. After approval, give a numbered task list (each task sma
    - A plan spanning several PRs groups its tasks into named parts, one per PR, and numbers tasks N.M (task 2 of part 5 is 5.2). A plan without parts is one part; number its tasks 1, 2, 3.
 3. Review the plan adversarially before anyone builds from it. Dispatch one fresh `reviewer` subagent with `plan-review-prompt.md` in this folder: it gets the spec, the plan and the repository, never your reasons for the choices, since a reviewer handed conclusions tends to confirm them. Re-read the plan and the code each finding points at, then sort it (first match wins):
    - **Spec gap**: the spec is silent, unclear or wrong → a question for the user, with your default. Gaps you found yourself while writing the plan go in the same message.
-   - **Noise**: wrong given context the reviewer lacked, or right but asking for no change → make no plan change for it, but add that context to the plan's global constraints if its absence caused the finding.
+   - **Noise**: wrong given context the reviewer lacked, or right but asking for no change → change no task for it, but add that context to the plan's global constraints if its absence caused the finding.
    - **Trade-off**: real, but fixing costs more than accepting → note it in the plan header and tell the user.
    - **Plan fix**: any other real finding → fix the plan.
 
@@ -76,7 +76,7 @@ For a fix or feature, create the branch first (per global git rules); an epic al
 
 - Implementer prompt: the task text from the plan, global constraints and the reuse list. The agent's own instructions cover TDD, verification, the commit and the report.
 - Reviewer prompt: `reviewer-prompt.md` in this folder, filled in with the task, constraints and the commit range.
-- Critical or Important findings, including those from the whole-branch review, go back to the implementer; re-review only the fix. Minor findings are listed for the user.
+- Critical or Important findings, including those the judge says stand in the whole-branch review, go back to the implementer; re-review only the fix. Minor findings are listed for the user.
 - You plan, dispatch and check; every code change goes through an implementer and a reviewer, and you write no production code.
 - A product or spec question an agent raises (behaviour, copy, an existing test's assertion) goes to the user, not to another agent. Record the answer in the spec.
 - Do not trust any report: check `git diff` and the test output yourself before moving on.
