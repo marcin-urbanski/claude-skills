@@ -48,6 +48,5 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      # Severity error: at warning, SC1010 flags "done" passed as a plain argument in tests/handoff-load.test.sh.
       - name: Run shellcheck
-        run: shellcheck --severity=error hooks/*.sh tests/*.sh evals/_shared/*.sh evals/*/fixture.sh
+        run: shellcheck --severity=warning hooks/*.sh tests/*.sh evals/_shared/*.sh evals/*/fixture.sh
