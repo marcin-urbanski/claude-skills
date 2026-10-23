@@ -168,7 +168,7 @@ test_all_other_matching_threads_are_named_newest_first() {
   write_thread a-oldest in-progress feature/a "MARKER-OLDEST"
   write_thread b-middle in-progress feature/a "MARKER-MIDDLE"
   write_thread c-newest in-progress feature/a "MARKER-NEWEST"
-  write_thread d-done done feature/a "MARKER-DONE"
+  write_thread d-done "done" feature/a "MARKER-DONE"
   touch -t 202601010000 "$threads/a-oldest.md"
   touch -t 202602010000 "$threads/b-middle.md"
   touch -t 202603010000 "$threads/c-newest.md"
@@ -190,7 +190,7 @@ test_overview_is_never_matched_by_branch() {
 
 test_done_thread_is_not_loaded() {
   new_fixture
-  write_thread a-thing done feature/a "MARKER-A"
+  write_thread a-thing "done" feature/a "MARKER-A"
   run_hook "$base/wt-a"
   assert_exit_0
   assert_empty
@@ -222,7 +222,7 @@ test_done_thread_with_trailing_spaces_is_not_loaded() {
 
 test_done_thread_does_not_hide_legacy_file() {
   new_fixture
-  write_thread a-thing done feature/a "MARKER-A"
+  write_thread a-thing "done" feature/a "MARKER-A"
   mkdir -p "$base/wt-a/docs"
   printf 'Status: in-progress\n\nLEGACY-MARKER\n' >"$base/wt-a/docs/handoff.md"
   run_hook "$base/wt-a"
@@ -323,7 +323,7 @@ test_list_shows_in_progress_threads_newest_first() {
   git -C "$main" branch feature/gone
   write_thread old-thing in-progress feature/old "STEP-OLD"
   write_thread new-thing in-progress feature/new "STEP-NEW"
-  write_thread finished-thing done feature/gone "STEP-DONE"
+  write_thread finished-thing "done" feature/gone "STEP-DONE"
   touch -t 202601010000 "$threads/old-thing.md"
   touch -t 202602010000 "$threads/new-thing.md"
   touch -t 202603010000 "$threads/finished-thing.md"
@@ -350,11 +350,11 @@ test_list_shows_in_progress_threads_newest_first() {
 test_list_age_is_in_days() {
   new_fixture
   new_session_worktree
-  local then
+  local old_ts
   write_thread old-thing in-progress feature/x "STEP-OLD"
   # Three days and two minutes ago in epoch seconds, so a DST change cannot shift the day count.
-  then=$(( $(date +%s) - 3 * 86400 - 120 ))
-  touch -t "$(date -r "$then" +%Y%m%d%H%M 2>/dev/null || date -d "@$then" +%Y%m%d%H%M)" "$threads/old-thing.md"
+  old_ts=$(( $(date +%s) - 3 * 86400 - 120 ))
+  touch -t "$(date -r "$old_ts" +%Y%m%d%H%M 2>/dev/null || date -d "@$old_ts" +%Y%m%d%H%M)" "$threads/old-thing.md"
   run_hook "$base/wt-new"
   assert_line "- old-thing " "updated 3 day(s) ago"
 }
@@ -507,7 +507,7 @@ test_list_never_shows_overview() {
 test_no_list_when_only_done_threads() {
   new_fixture
   new_session_worktree
-  write_thread a-thing done feature/a "STEP-A"
+  write_thread a-thing "done" feature/a "STEP-A"
   run_hook "$base/wt-new"
   assert_exit_0
   assert_empty
@@ -715,7 +715,7 @@ test_overview_not_loaded_in_linked_worktree() {
 
 test_done_overview_is_not_loaded() {
   new_fixture
-  write_overview done "OVERVIEW-MARKER"
+  write_overview "done" "OVERVIEW-MARKER"
   write_thread a-thing in-progress feature/x "STEP-A"
   run_hook "$main"
   assert_exit_0
@@ -736,7 +736,7 @@ test_overview_with_plan_gets_coordination_line_not_spec_first() {
 
 test_done_overview_alone_is_quiet() {
   new_fixture
-  write_overview done "OVERVIEW-MARKER"
+  write_overview "done" "OVERVIEW-MARKER"
   run_hook "$main"
   assert_exit_0
   assert_empty
@@ -992,7 +992,7 @@ test_old_file_with_same_slug_as_done_new_file_is_ignored() {
   new_fixture
   new_session_worktree
   write_old_thread a-thing in-progress feature/a "STEP-OLD"
-  write_thread a-thing done feature/a "STEP-NEW"
+  write_thread a-thing "done" feature/a "STEP-NEW"
   run_hook "$base/wt-new"
   assert_exit_0
   assert_empty
@@ -1021,7 +1021,7 @@ test_old_folder_overview_loads_in_main_checkout() {
 
 test_new_folder_overview_wins_over_old_one() {
   new_fixture
-  write_overview done "OVERVIEW-NEW"
+  write_overview "done" "OVERVIEW-NEW"
   local new="$threads"
   threads="$old_threads"
   write_overview in-progress "OVERVIEW-OLD"

@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Cancel superseded PR runs, but keep a result for every commit on main.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+# Evals (evals/) call a model through `claude plugin eval` and are not run here.
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run handoff-load hook tests
+        run: bash tests/handoff-load.test.sh
+      - name: Run handoff-nudge hook tests
+        run: bash tests/handoff-nudge.test.sh
+      - name: Run Python script tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
+
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check skill frontmatter
+        run: bash tests/skill-frontmatter.test.sh
+      - name: Check JSON manifests
+        run: git ls-files -z '*.json' | xargs -0 jq empty
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run shellcheck
+        run: git ls-files -z '*.sh' | xargs -0 shellcheck --severity=warning
