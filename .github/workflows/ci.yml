@@ -39,7 +39,7 @@ jobs:
       - name: Check skill frontmatter
         run: bash tests/skill-frontmatter.test.sh
       - name: Check JSON manifests
-        run: jq empty .claude-plugin/*.json hooks/hooks.json
+        run: git ls-files -z '*.json' | xargs -0 jq empty
 
   lint:
     runs-on: ubuntu-latest
@@ -49,4 +49,4 @@ jobs:
         with:
           persist-credentials: false
       - name: Run shellcheck
-        run: shellcheck --severity=warning hooks/*.sh tests/*.sh evals/_shared/*.sh evals/*/fixture.sh
+        run: git ls-files -z '*.sh' | xargs -0 shellcheck --severity=warning
