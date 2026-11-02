@@ -29,6 +29,24 @@ jobs:
       - name: Run Python script tests
         run: python3 -m unittest discover -s tests -p 'test_*.py'
 
+  # The hooks run under Git Bash on Windows: keep the shell tests passing there too.
+  test-windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Run handoff-load hook tests
+        run: bash tests/handoff-load.test.sh
+      - name: Run handoff-nudge hook tests
+        run: bash tests/handoff-nudge.test.sh
+      - name: Check skill frontmatter
+        run: bash tests/skill-frontmatter.test.sh
+
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 5
