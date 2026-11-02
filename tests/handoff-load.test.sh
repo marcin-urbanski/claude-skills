@@ -20,11 +20,12 @@ handoffs_dir() {
 }
 
 # case_dir: a fresh folder under $TMP, as git reports its path: canonical on macOS (/var is
-# /private/var) and a drive path (C:/Users/...) under Git Bash, where mktemp and pwd say /tmp/....
+# /private/var) and a long-name drive path (C:/Users/runneradmin/..., not RUNNER~1) under Git
+# Bash, where mktemp and pwd say /tmp/....
 case_dir() {
   local d
   d=$(mktemp -d "$TMP/case.XXXXXX")
-  if command -v cygpath >/dev/null 2>&1; then cygpath -m "$d"; else (cd "$d" && pwd -P); fi
+  if command -v cygpath >/dev/null 2>&1; then cygpath -m -l "$d"; else (cd "$d" && pwd -P); fi
 }
 
 passed=0
@@ -644,8 +645,8 @@ test_closed_stdin_behaves_as_startup() {
 test_compact_without_jq_behaves_as_startup() {
   compact_fixture
   local bin tool
-  bin="$base/bin"
-  mkdir -p "$bin"
+  # Under $TMP, not $base: a drive path (C:/...) would split PATH at its colon.
+  bin=$(mktemp -d "$TMP/bin.XXXXXX")
   # Every tool the hook uses, except jq. Wrapper scripts, not symlinks: Windows needs rights for those.
   for tool in awk basename date dirname git grep head sed sort stat tr uname; do
     printf '#!/bin/sh\nexec %s "$@"\n' "$(type -P "$tool")" >"$bin/$tool"
