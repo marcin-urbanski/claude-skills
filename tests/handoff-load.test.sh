@@ -19,6 +19,15 @@ handoffs_dir() {
   printf '%s/handoffs/%s' "$CLAUDE_CONFIG_DIR" "$(printf '%s' "$1" | LC_ALL=C sed 's/[^A-Za-z0-9]/-/g')"
 }
 
+# case_dir: a fresh folder under $TMP, as git reports its path: canonical on macOS (/var is
+# /private/var) and a long-name drive path (C:/Users/runneradmin/..., not RUNNER~1) under Git
+# Bash, where mktemp and pwd say /tmp/....
+case_dir() {
+  local d
+  d=$(mktemp -d "$TMP/case.XXXXXX")
+  if command -v cygpath >/dev/null 2>&1; then cygpath -m -l "$d"; else (cd "$d" && pwd -P); fi
+}
+
 passed=0
 failed=0
 errors=0
@@ -76,8 +85,7 @@ run_hook_with_stdin() {
 
 # new_fixture: $base/main (one commit, on main), worktrees $base/wt-a on feature/a and $base/wt-b on feature/b.
 new_fixture() {
-  # Canonical path (macOS /var is /private/var), as git reports it.
-  base=$(cd "$(mktemp -d "$TMP/case.XXXXXX")" && pwd -P)
+  base=$(case_dir)
   main="$base/main"
   git init -q -b main "$main"
   git -C "$main" commit -q --allow-empty -m init
@@ -450,6 +458,8 @@ test_list_skips_unreadable_thread_file() {
   write_thread a-thing in-progress feature/x "STEP-A"
   write_thread locked-thing in-progress feature/y "STEP-LOCKED"
   chmod 000 "$threads/locked-thing.md"
+  # Nothing to test where chmod cannot make a file unreadable (Git Bash on Windows, root).
+  if [ -r "$threads/locked-thing.md" ]; then chmod 644 "$threads/locked-thing.md"; return 0; fi
   run_hook "$base/wt-new"
   chmod 644 "$threads/locked-thing.md"
   assert_exit_0
@@ -635,11 +645,12 @@ test_closed_stdin_behaves_as_startup() {
 test_compact_without_jq_behaves_as_startup() {
   compact_fixture
   local bin tool
-  bin="$base/bin"
-  mkdir -p "$bin"
-  # Every tool the hook uses, except jq.
+  # Under $TMP, not $base: a drive path (C:/...) would split PATH at its colon.
+  bin=$(mktemp -d "$TMP/bin.XXXXXX")
+  # Every tool the hook uses, except jq. Wrapper scripts, not symlinks: Windows needs rights for those.
   for tool in awk basename date dirname git grep head sed sort stat tr uname; do
-    ln -s "$(type -P "$tool")" "$bin/$tool"
+    printf '#!/bin/sh\nexec %s "$@"\n' "$(type -P "$tool")" >"$bin/$tool"
+    chmod +x "$bin/$tool"
   done
   out=$(printf '%s' '{"source":"compact"}' | PATH="$bin" CLAUDE_PROJECT_DIR="$main" "$BASH" "$HOOK" 2>&1)
   code=$?
@@ -780,7 +791,7 @@ test_legacy_done_note_before_list() {
 # new_submodule_fixture: superproject $super (on main) with submodules $sub and $sub2 (both on main),
 # cloned from $base/lib and $base/lib2. Thread folders: $super_threads, $sub_threads.
 new_submodule_fixture() {
-  base=$(cd "$(mktemp -d "$TMP/case.XXXXXX")" && pwd -P)
+  base=$(case_dir)
   super="$base/super"
   sub="$super/libsub"
   sub2="$super/libsub2"
@@ -881,7 +892,7 @@ test_submodule_worktree_names_submodule_checkout_that_holds_the_branch() {
 
 # new_separate_git_dir_fixture: $repo (on main) whose git dir is $base/repo.git.
 new_separate_git_dir_fixture() {
-  base=$(cd "$(mktemp -d "$TMP/case.XXXXXX")" && pwd -P)
+  base=$(case_dir)
   repo="$base/repo"
   git init -q -b main --separate-git-dir "$base/repo.git" "$repo"
   git -C "$repo" commit -q --allow-empty -m init
@@ -915,9 +926,10 @@ test_separate_git_dir_linked_worktree_is_quiet() {
 
 test_thread_folder_is_named_after_main_checkout_path() {
   new_fixture
-  # The fixture path has slashes, dots (case.XXXXXX) and maybe underscores (macOS TMPDIR); all become dashes.
-  mkdir -p "$CLAUDE_CONFIG_DIR/handoffs/$(printf '%s' "$main" | tr './_' '---')"
-  printf 'Status: in-progress\nBranch: feature/a\n\nMARKER-A\n' >"$CLAUDE_CONFIG_DIR/handoffs/$(printf '%s' "$main" | tr './_' '---')/a-thing.md"
+  # The fixture path has slashes, dots (case.XXXXXX), maybe underscores (macOS TMPDIR) and a drive
+  # colon (Windows); all become dashes.
+  mkdir -p "$CLAUDE_CONFIG_DIR/handoffs/$(printf '%s' "$main" | tr './_:' '----')"
+  printf 'Status: in-progress\nBranch: feature/a\n\nMARKER-A\n' >"$CLAUDE_CONFIG_DIR/handoffs/$(printf '%s' "$main" | tr './_:' '----')/a-thing.md"
   run_hook "$base/wt-a"
   assert_contains "MARKER-A"
 }
@@ -936,7 +948,7 @@ test_thread_folder_name_does_not_depend_on_locale() {
   local utf8
   utf8=$(locale -a 2>/dev/null | grep -i -m1 'utf-\?8$' || true)
   [ -n "$utf8" ] || return 0
-  base=$(cd "$(mktemp -d "$TMP/case.XXXXXX")" && pwd -P)
+  base=$(case_dir)
   main="$base/zażółć"
   git init -q -b main "$main"
   git -C "$main" commit -q --allow-empty -m init
