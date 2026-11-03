@@ -20,6 +20,15 @@ The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list 
 - `claude-opus-5-5` needs Claude Code 2.1.280 or newer (`claude update`).
 - The eval refuses to grant Bash if `~/.docker` (or `DOCKER_CONFIG`) contains symlinks, which a removed Docker Desktop leaves behind.
 
+### On Linux (including Claude Code cloud sessions)
+
+- Bash needs a sandbox backend. Without one the run fails with `bubblewrap (bwrap) not installed, socat not installed`. Install both with `apt-get install -y bubblewrap socat`. In a cloud session, put that in the environment's setup script, because a new container starts without them.
+- Set `TMPDIR` to a folder outside `/tmp` and `/var/tmp`. The eval keeps its own temp folder under `TMPDIR`, but its sandbox blocks all writes to `/tmp`. On Linux, where `TMPDIR` defaults to `/tmp`, every Bash call then ends with `cwd-…: Read-only file system` and is reported as failed, even when the command worked. This skews the cases that check how the agent reacts to test results. macOS keeps temp folders under `/var/folders`, so it isn't affected.
+  ```bash
+  mkdir -p ~/eval-tmp
+  TMPDIR=~/eval-tmp claude plugin eval . ...
+  ```
+
 ## Cases
 
 Each case's `append_system_prompt` holds a copy of the "How I work" section of the global `~/.claude/CLAUDE.md`, so both arms see the user's real rules and the difference measures what the skill adds on top of them. That section names the skills, so firing is prompted, not spontaneous. Update every copy when the section changes.
