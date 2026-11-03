@@ -7,7 +7,7 @@ Cases for `claude plugin eval`. Each case runs in a clean, isolated Claude Code,
 ```bash
 claude plugin eval . -j 4 --scaffold --trust-plugin --no-publish \
   --model claude-opus-5-5 --judge-model haiku --max-cost-usd 10 \
-  --allow-tools Write Edit "Bash(python3 -m *)"
+  --allow-tools Write Edit Bash
 ```
 
 Add `--case <name> --runs 1 --ablation none` for a quick check of one case, and `--keep-temp` to keep the transcripts (`trace.jsonl`) for checking what a grader saw. Results go to `evals/results/`, which git ignores.
@@ -20,11 +20,28 @@ The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list 
 - `claude-opus-5-5` needs Claude Code 2.1.280 or newer (`claude update`).
 - The eval refuses to grant Bash if `~/.docker` (or `DOCKER_CONFIG`) contains symlinks, which a removed Docker Desktop leaves behind.
 
+### On Linux (including Claude Code cloud sessions)
+
+- Bash needs a sandbox backend. Without one the run fails with `bubblewrap (bwrap) not installed, socat not installed`. Install both with `apt-get install -y bubblewrap socat`. In a cloud session, put that in the environment's setup script, because a new container starts without them.
+- Set `TMPDIR` to a folder outside `/tmp` and `/var/tmp`. The eval keeps its own temp folder under `TMPDIR`, but its sandbox blocks all writes to `/tmp`. On Linux, where `TMPDIR` defaults to `/tmp`, every Bash call then ends with `cwd-…: Read-only file system` and is reported as failed, even when the command worked. This skews the cases that check how the agent reacts to test results. macOS keeps temp folders under `/var/folders`, so it isn't affected.
+  ```bash
+  mkdir -p ~/eval-tmp
+  TMPDIR=~/eval-tmp claude plugin eval . ...
+  ```
+
 ## Cases
 
 Each case's `append_system_prompt` holds a copy of the "How I work" section of the global `~/.claude/CLAUDE.md`, so both arms see the user's real rules and the difference measures what the skill adds on top of them. That section names the skills, so firing is prompted, not spontaneous. Update every copy when the section changes.
 
-Graders that check order (`test-edited-before-fix`, `red-in-trace`, `full-suite-after-fix`) are regexes over the whole trace. The `llm` grader `red-before-fix` is secondary: its judge sees only the first and last lines of a long trace.
+Graders that check order (`test-edited-before-fix`, `red-in-trace`, `full-suite-after-fix`) are regexes over the whole trace. A file can change through Edit, Write or a Bash command (a redirect, `sed -i`, Python `open(..., 'w')`), so they match all three; `tests/test_graders.py` pins what they accept. The `llm` grader `red-before-fix` is secondary: its judge sees only the first and last lines of a long trace.
+
+After changing a regex grader, re-score runs already made from their kept transcripts instead of running them again:
+
+```bash
+python3 scripts/regrade.py --traces <dir of trace.jsonl copies> --out <dir> evals/results/<result>.json
+```
+
+It prints every grader result that changed and writes the re-scored results, which `scripts/study-table.py` reads.
 
 | Case | What it checks |
 |---|---|
