@@ -33,7 +33,15 @@ The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list 
 
 Each case's `append_system_prompt` holds a copy of the "How I work" section of the global `~/.claude/CLAUDE.md`, so both arms see the user's real rules and the difference measures what the skill adds on top of them. That section names the skills, so firing is prompted, not spontaneous. Update every copy when the section changes.
 
-Graders that check order (`test-edited-before-fix`, `red-in-trace`, `full-suite-after-fix`) are regexes over the whole trace. The `llm` grader `red-before-fix` is secondary: its judge sees only the first and last lines of a long trace.
+Graders that check order (`test-edited-before-fix`, `red-in-trace`, `full-suite-after-fix`) are regexes over the whole trace. A file can change through Edit, Write or a Bash command (a redirect, `sed -i`, Python `open(..., 'w')`), so they match all three; `tests/test_graders.py` pins what they accept. The `llm` grader `red-before-fix` is secondary: its judge sees only the first and last lines of a long trace.
+
+After changing a regex grader, re-score runs already made from their kept transcripts instead of running them again:
+
+```bash
+python3 scripts/regrade.py --traces <dir of trace.jsonl copies> --out <dir> evals/results/<result>.json
+```
+
+It prints every grader result that changed and writes the re-scored results, which `scripts/study-table.py` reads.
 
 | Case | What it checks |
 |---|---|
