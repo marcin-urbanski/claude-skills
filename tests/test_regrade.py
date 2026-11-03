@@ -97,6 +97,14 @@ class RegradeTest(unittest.TestCase):
         path = self.trace("plugin.jsonl", "e-Ab12Cd", "ls", first=[hook])
         self.assertEqual(regrade.index_traces(self.traces), {"e-Ab12Cd": path})
 
+    def test_matches_the_run_folder_name_used_on_linux(self):
+        self.trace("linux.jsonl", "eval-tmp/claude-eval-2QvQHL", "make it's green")
+        linux_run = run("eval-tmp/claude-eval-2QvQHL", False)
+        linux_run["tracePath"] = linux_run["tracePath"].replace("/private/tmp/", "/home/user/")
+        data = self.result("evals", [linux_run], [])
+        flips = regrade.regrade(data, regrade.index_traces(self.traces), self.evals)
+        self.assertEqual(flips, [("c", "evals", "with", 0, "green", False, True)])
+
     def test_ignores_files_that_are_not_transcripts(self):
         self.write(os.path.join(self.traces, ".DS_Store"), "\x00\x01")
         path = self.trace("run.jsonl", "e-Ab12Cd", "ls")

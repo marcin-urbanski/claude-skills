@@ -1,7 +1,8 @@
 """Re-apply the regex graders to saved transcripts, without re-running the agents.
 
 A fixed regex grader then changes the scores of runs already paid for. Each run
-is matched to its transcript by the run's temp folder (e-XXXXXX), which appears
+is matched to its transcript by the run's temp folder (e-XXXXXX on macOS,
+claude-eval-XXXXXX on Linux), which appears
 in both the result's tracePath and the transcript's cwd, so transcript file
 names do not matter. Graders are read from evals/<case>/graders, also for
 results from evals-norules/, whose graders are copies of them.
@@ -20,7 +21,7 @@ import os
 import re
 import sys
 
-RUN_ID = re.compile(r"/(e-[A-Za-z0-9]+)/")
+RUN_ID = re.compile(r"/((?:claude-eval|e)-[A-Za-z0-9]+)/")
 EVALS = os.path.join(os.path.dirname(__file__), "..", "evals")
 
 

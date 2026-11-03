@@ -81,6 +81,12 @@ class FullSuiteAfterFixTest(unittest.TestCase):
     def test_edit_then_only_test_money_fails(self):
         self.assertFalse(self.passes(edit("money.py"), bash("python3 -m unittest test_money -v")))
 
+    def test_python_without_3_runs_the_suite_on_linux(self):
+        self.assertTrue(self.passes(edit("money.py"), bash("python -m unittest test_money test_receipt -v 2>&1 | grep -v bashrc")))
+
+    def test_python_without_3_running_only_test_money_fails(self):
+        self.assertFalse(self.passes(edit("money.py"), bash("python -m unittest test_money -v")))
+
     def test_python_heredoc_fix_and_suite_in_one_command(self):
         self.assertTrue(self.passes(bash(PY_HEREDOC + "python3 -m unittest test_money test_receipt -v")))
 
