@@ -51,7 +51,7 @@ for dir in evals evals-norules; do
     claude plugin eval . --eval-dir "$dir" --case "$case" --runs 10 -j 4 \
       --scaffold --trust-plugin --no-publish --keep-temp \
       --model claude-opus-5-5 --judge-model haiku \
-      --allow-tools Write Edit "Bash(python3 -m *)" \
+      --allow-tools Write Edit Bash \
       --json "evals/results/study/opus-$dir-$case.json"
   done
 done
