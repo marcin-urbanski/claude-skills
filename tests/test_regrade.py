@@ -105,6 +105,16 @@ class RegradeTest(unittest.TestCase):
         flips = regrade.regrade(data, regrade.index_traces(self.traces), self.evals)
         self.assertEqual(flips, [("c", "evals", "with", 0, "green", False, True)])
 
+    def test_takes_the_run_folder_not_a_parent_with_a_similar_name(self):
+        path = self.trace("nested.jsonl", "claude-eval-tmp/claude-eval-2QvQHL", "ls")
+        self.assertEqual(regrade.index_traces(self.traces), {"claude-eval-2QvQHL": path})
+
+    def test_stops_when_two_transcripts_share_a_run_folder(self):
+        self.trace("one.jsonl", "e-aaaaaa", "ls")
+        self.trace("two.jsonl", "e-aaaaaa", "ls")
+        with self.assertRaisesRegex(SystemExit, "e-aaaaaa"):
+            regrade.index_traces(self.traces)
+
     def test_ignores_files_that_are_not_transcripts(self):
         self.write(os.path.join(self.traces, ".DS_Store"), "\x00\x01")
         path = self.trace("run.jsonl", "e-Ab12Cd", "ls")

@@ -21,7 +21,7 @@ import os
 import re
 import sys
 
-RUN_ID = re.compile(r"/((?:claude-eval|e)-[A-Za-z0-9]+)/")
+RUN_ID = re.compile(r"/((?:claude-eval|e)-[A-Za-z0-9]+)/(?:out|home)/")
 EVALS = os.path.join(os.path.dirname(__file__), "..", "evals")
 
 
@@ -62,6 +62,8 @@ def index_traces(traces_dir):
                 if event.get("subtype") == "init":
                     found = RUN_ID.search(event["cwd"])
                     if found:
+                        if found.group(1) in traces:
+                            sys.exit(f"{traces[found.group(1)]} and {path} share run folder {found.group(1)}")
                         traces[found.group(1)] = path
                     break
     return traces
