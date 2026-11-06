@@ -69,6 +69,18 @@ Follow the project's CLAUDE.md for locations if it names others.
 
 ## 5. Build
 
+**Session layout.** Decide it by size, and state it in one line when you show the reviewed plan (for a fix or feature, with the task list):
+
+- **Fix, feature, or an epic with one part:** this session builds it and opens one PR.
+- **An epic with several parts**, when you can start other sessions (the Claude desktop app's `start_session`): this session becomes the main session, the orchestrator in `handoff`. It writes no code and runs no build loop; one worker session per part does, each in its own worktree. Unless the user wants everything here:
+  1. Step 4's feature branch, with spec and plan committed, is part 1's branch: rename it with `git branch -m feature/<topic>-1` if it has another name (later parts get `feature/<topic>-<n>`). Push it and switch this checkout back to the branch it was on before (the base branch in the main checkout, the `cc/<name>` placeholder in an app worktree). Part 1 carries spec and plan to the base branch, so the other parts start once it is merged.
+  2. Write `_overview.md` with `handoff`, one thread per part with its branch.
+  3. Start a worker for each part whose dependencies are merged, at the same time when they do not depend on each other: fresh context, own worktree, brief `You are the worker for part N (<name>) of <plan path>, which is reviewed and approved: invoke spec-first and go straight to step 5. Build this part in this session through Finish to its PR, on branch feature/<topic>-<n> (switch to it if it exists, otherwise fetch and create it from origin/<base>). Handoff thread: <topic>-<n>.` Each start is a card the user clicks unless they told you to start them. Tell the user to come back to this session after each merge.
+  4. On every turn, first check each open part's PR (`gh pr view`), since a merge does not wake this session. When a worker's PR is open, check its diff yourself. After a merge, run `pr-done` if it is installed (otherwise update the base branch), update `_overview.md` and start the parts that are now unblocked.
+
+  Without session tools (the terminal CLI), or when the user prefers one session, build the parts here one after another, with `handoff` between sessions.
+- **A worker** (its brief names one part) builds that part like an epic with one part and never starts workers of its own.
+
 For a fix or feature, create the branch first (per global git rules); an epic already has it from step 4. Then, per task:
 
 **Default (fix, feature):** do the task in this session with `tdd`, then a self-review against `reviewer-checklist.md` in this folder and the project's `CODING_STANDARDS.md` and `CONTRIBUTING.md`, whichever exist: reuse, security, best practices, spec compliance. Fix what you find. Commit with a conventional message. Next task.
