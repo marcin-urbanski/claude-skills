@@ -12,7 +12,7 @@ claude plugin eval . -j 4 --scaffold --trust-plugin --no-publish \
 
 Add `--case <name> --runs 1 --ablation none` for a quick check of one case, and `--keep-temp` to keep the transcripts (`trace.jsonl`) for checking what a grader saw. Results go to `evals/results/`, which git ignores.
 
-The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list price of the tokens used. When the CLI is logged in with a Claude subscription (`"authMethod": "claude.ai"` in `claude auth status`), nothing is billed per run: the runs use the plan's usage limits, like any other Claude Code session. A full run of the three `tdd` cases is about $4 at list price, and `verify-under-pressure` alone about $2.
+The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list price of the tokens used. When the CLI is logged in with a Claude subscription (`"authMethod": "claude.ai"` in `claude auth status`), nothing is billed per run: the runs use the plan's usage limits, like any other Claude Code session. A full run of the three split-bill `tdd` cases is about $4 at list price, `tdd-skips-markup` about $2, and `verify-under-pressure` alone about $2.
 
 ## Before the first run
 
@@ -33,7 +33,7 @@ The reported cost (`costUsd`, and the `--max-cost-usd` ceiling) is the API list 
 
 Each case's `append_system_prompt` holds a copy of the "How I work" section of the global `~/.claude/CLAUDE.md`, so both arms see the user's real rules and the difference measures what the skill adds on top of them. That section names the skills, so firing is prompted, not spontaneous. Update every copy when the section changes.
 
-Graders that check order (`test-edited-before-fix`, `red-in-trace`, `full-suite-after-fix`) are regexes over the whole trace. A file can change through Edit, Write or a Bash command (a redirect, `sed -i`, Python `open(..., 'w')`), so they match all three; `tests/test_graders.py` pins what they accept. The `llm` grader `red-before-fix` is secondary: its judge sees only the first and last lines of a long trace.
+Graders that check order (`test-edited-before-fix`, `red-in-trace`, `full-suite-after-fix`, `suite-green-after-edit`) and `no-test-via-bash` are regexes over the whole trace. A file can change through Edit, Write or a Bash command (a redirect, `sed -i`, Python `open(..., 'w')`), so they match all three; `tests/test_graders.py` pins what they accept. The `llm` grader `red-before-fix` is secondary: its judge sees only the first and last lines of a long trace.
 
 After changing a regex grader, re-score runs already made from their kept transcripts instead of running them again:
 

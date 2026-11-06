@@ -1,6 +1,6 @@
 ---
 type: regex
 target: trace
-pattern: '(?:"file_path":"[^"]*/index\.html","(?:old_string|content)"|"command":"(?:[^"\\]|\\.)*?(?:(?<!\w)|(?<=\\n))sed +(?:-[A-Za-z]+ +)*-[A-Za-z]*i(?:[^"\\]|\\.)*?(?<![\w-])index\.html(?![\w.]))[\s\S]*?Ran \d+ tests? in [\d.]+s\\n\\nOK(?![\s\S]*?FAILED \()'
+pattern: '(?:"file_path":"[^"]*/index\.html","(?:old_string|content)"|"command":"(?:[^"\\]|\\.)*?(?:>>? *(?:\\"|\x27)?(?:[\w.-]*/)*(?<![\w-])index\.html(?![\w.])|(?:(?<!\w)|(?<=\\n))sed +(?:-[A-Za-z]+ +)*-[A-Za-z]*i(?:\x27(?:[^\x27"\\]|\\.)*\x27|[^"\;&|\x27]|\\[^n])*?(?<![\w-])index\.html(?![\w.])|(?:(?<!\w)|(?<=\\n))open\( *(?:\\"|\x27)(?:[\w./-]*/)?(?<![\w-])index\.html(?![\w.]) *(?:\\"|\x27) *, *(?:\\"|\x27)[wa]))[\s\S]*?(?:Ran \d+ tests? in [\d.]+s\\n\\nOK|"(?:content|stdout)":"OK(?:\\n)?"|={2,} \d+ passed)(?![\s\S]*?(?:(?:FAILED \(|={2,} [^"\\=]*?\d+ (?:failed|errors?)\b)|(?:"file_path":"[^"]*/index\.html","(?:old_string|content)"|"command":"(?:[^"\\]|\\.)*?(?:>>? *(?:\\"|\x27)?(?:[\w.-]*/)*(?<![\w-])index\.html(?![\w.])|(?:(?<!\w)|(?<=\\n))sed +(?:-[A-Za-z]+ +)*-[A-Za-z]*i(?:\x27(?:[^\x27"\\]|\\.)*\x27|[^"\;&|\x27]|\\[^n])*?(?<![\w-])index\.html(?![\w.])|(?:(?<!\w)|(?<=\\n))open\( *(?:\\"|\x27)(?:[\w./-]*/)?(?<![\w-])index\.html(?![\w.]) *(?:\\"|\x27) *, *(?:\\"|\x27)[wa]))))'
 ---
-After index.html is first changed (Edit, Write or `sed -i`), a unittest run passes and no later run fails.
+After index.html is changed (Edit, Write or Bash), a test run passes, and after that no run fails and the page is not changed again. A Bash command counts as a change when it writes the page through a redirect, `sed -i` or Python `open(..., 'w')`. A passing run is unittest's `Ran N tests … OK`, a bare `OK` (as `| tail -1` leaves it) or pytest's `== N passed`.
