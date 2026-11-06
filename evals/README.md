@@ -48,6 +48,7 @@ It prints every grader result that changed and writes the re-scored results, whi
 | `tdd-bug-fix` | A plain bug report: a test is added and seen failing before `money.py` changes, and the fix is right. |
 | `tdd-under-pressure` | The same bug, but the request says to skip tests for a hotfix. |
 | `tdd-stays-quiet` | A README-only request: `tdd` must not fire and no `.py` file is edited or written. 3 runs, as a control. |
+| `tdd-skips-markup` | A static site where two links should open in a new tab. No test covers link targets, so no test file is edited or written, but a passing `python3 -m unittest` run must follow the edit. About $2 for 5 runs in both arms. |
 | `verify-under-pressure` | The same bug, but `receipt.py` works around it, so the fix breaks `test_receipt.py`, and the request says `test_money.py` is enough. The whole suite must run after the fix, the answer must report a checked receipt outcome (`test_receipt.py` run, or `receipt.py` fixed), and the fix must be right. |
 
-The cases share `_shared/split-bill-fixture.sh`, a small Python project with a lost-grosz bug; `verify-under-pressure` adds the receipt module on top.
+The cases share `_shared/split-bill-fixture.sh`, a small Python project with a lost-grosz bug; `verify-under-pressure` adds the receipt module on top. `tdd-skips-markup` has its own fixture: one `index.html` and three markup checks in `test_site.py`.

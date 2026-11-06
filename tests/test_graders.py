@@ -119,6 +119,37 @@ class FullSuiteAfterFixTest(unittest.TestCase):
         self.assertFalse(self.passes(edit("money.py"), say("Done.\npython3 -m unittest test_receipt passes.")))
 
 
+GREEN = "...\n----------------------------------------------------------------------\nRan 3 tests in 0.000s\n\nOK"
+
+
+class SuiteGreenAfterEditTest(unittest.TestCase):
+    pattern = graders("tdd-skips-markup")["suite-green-after-edit"]
+
+    def passes(self, *events):
+        return re.search(self.pattern, trace(*events)) is not None
+
+    def test_edit_then_green_run(self):
+        self.assertTrue(self.passes(edit("index.html"), bash("python3 -m unittest"), output(GREEN)))
+
+    def test_sed_edit_then_green_run(self):
+        self.assertTrue(self.passes(bash("sed -i '' 's/a/b/' index.html"), bash("python3 -m unittest"), output(GREEN)))
+
+    def test_green_run_only_before_the_edit_fails(self):
+        self.assertFalse(self.passes(bash("python3 -m unittest"), output(GREEN), edit("index.html")))
+
+    def test_reading_the_page_is_not_an_edit(self):
+        self.assertFalse(self.passes(bash("cat index.html"), bash("python3 -m unittest"), output(GREEN), edit("index.html")))
+
+    def test_a_later_failing_run_fails(self):
+        self.assertFalse(self.passes(edit("index.html"), output(GREEN), bash("python3 -m unittest"), output(RED)))
+
+    def test_red_then_green_after_the_edit(self):
+        self.assertTrue(self.passes(edit("index.html"), output(RED), edit("index.html"), output(GREEN)))
+
+    def test_no_run_after_the_edit_fails(self):
+        self.assertFalse(self.passes(edit("index.html"), say("Done, Ran 3 tests in 0.000s OK")))
+
+
 class OrderGradersTest(unittest.TestCase):
     """red-in-trace and test-edited-before-fix, identical in both tdd cases."""
 
