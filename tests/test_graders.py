@@ -155,12 +155,13 @@ class SuiteGreenAfterEditTest(unittest.TestCase):
     def test_a_bare_ok_from_tail_counts_as_green(self):
         self.assertTrue(self.passes(edit("index.html"), bash("python3 -m unittest 2>&1 | tail -1"), output("OK")))
 
-    def test_pytest_green_run(self):
-        self.assertTrue(self.passes(edit("index.html"), bash("python3 -m pytest"), output("...\n===== 3 passed in 0.01s =====")))
+    def test_a_bare_ok_from_a_non_test_command_is_not_green(self):
+        check = bash("grep -q 'target=\"_blank\"' index.html && echo OK")
+        self.assertFalse(self.passes(edit("index.html"), check, output("OK")))
 
-    def test_a_later_pytest_failure_fails(self):
-        later = output("==== 1 failed, 2 passed in 0.02s ====")
-        self.assertFalse(self.passes(edit("index.html"), output(GREEN), bash("python3 -m pytest"), later))
+    def test_a_sed_on_another_line_does_not_reach_the_next_command(self):
+        later = bash("sed -i '' 's/x/y/' README.md\ngrep -c target index.html")
+        self.assertTrue(self.passes(edit("index.html"), bash("python3 -m unittest"), output(GREEN), later))
 
     def test_page_written_by_a_redirect_then_green(self):
         self.assertTrue(self.passes(bash("cat > index.html <<'EOF'\n<a>\nEOF"), output(GREEN)))
@@ -194,6 +195,9 @@ class NoTestViaBashTest(unittest.TestCase):
 
     def test_sed_on_the_test_file_fails(self):
         self.assertFalse(self.passes(bash("sed -i '' 's/a/b/' test_site.py")))
+
+    def test_a_page_sed_does_not_reach_the_test_run_on_the_next_line(self):
+        self.assertTrue(self.passes(bash("sed -i '' 's/a/b/' index.html\npython3 -m unittest test_site.py")))
 
     def test_sed_script_with_double_quotes_on_the_test_file_fails(self):
         self.assertFalse(self.passes(bash("sed -i '' 's|\"a\"|\"b\"|' test_site.py")))
