@@ -19,12 +19,10 @@ git worktree add ../claude-skills-<name> -b feature/<name> main
 Commit, push and open the PR from the worktree. After I merge the PR:
 
 ```bash
-git -C ~/Developer/claude-skills pull
-git -C ~/Developer/claude-skills worktree remove ../claude-skills-<name>
-git -C ~/Developer/claude-skills branch -d feature/<name>
+cd ~/Developer/claude-skills && scripts/pr-done.sh <PR number>
 ```
 
-The change reaches sessions only after that `pull`, because the symlinks point at `~/Developer/claude-skills`. GitHub deletes the remote branch on merge. `branch -d` refuses to delete a branch that is not merged, so if it fails, stop and tell me instead of forcing it with `-D`.
+It updates `main`, removes the worktree and deletes the branch. The change reaches sessions only after `main` is updated, because the symlinks point at `~/Developer/claude-skills`. GitHub deletes the remote branch on merge. If `pr-done` refuses (uncommitted changes, or commits on the branch that are not in the PR), stop and tell me instead of cleaning up by hand.
 
 ## After changing `handoff` or `ux-principles`
 
