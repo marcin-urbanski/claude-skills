@@ -26,6 +26,8 @@ jobs:
         run: bash tests/handoff-load.test.sh
       - name: Run handoff-nudge hook tests
         run: bash tests/handoff-nudge.test.sh
+      - name: Run pr-done tests
+        run: bash tests/pr-done.test.sh
       - name: Run Python script tests
         run: python3 -m unittest discover -s tests -p 'test_*.py'
 

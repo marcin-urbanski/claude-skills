@@ -71,6 +71,7 @@ A skill call is easy to miss in the chat. This inline hook (no script needed) pr
 ## Scripts
 
 - [`skill-usage.py`](scripts/skill-usage.py) reads the local transcripts in `~/.claude/projects` and reports, per session, which skills the main session and its subagents invoked, next to the number of code edits and commits. Bash commands that write code files (`>`, `tee`, `sed -i`, Python writes) count as edits. Use it to check whether the skills are actually used: `scripts/skill-usage.py TimeTracker --since 2026-10-05T07:31` (UTC; a plain date works too). Tests: `python3 -m unittest discover -s tests -p 'test_*.py'`.
+- [`pr-done.sh`](scripts/pr-done.sh) cleans up after a pull request is merged on GitHub, in any repo: it removes the PR branch's worktree, brings the base branch up to date and deletes the local branch. Run `pr-done.sh` on the PR's branch, or `pr-done.sh <PR number>` from anywhere in the repo. It checks first and changes nothing when the PR is not merged, the worktree has uncommitted changes, or the local branch has commits that are not in the PR, so a squash-merged branch is deleted safely. A base branch with local commits, or local changes in the way, is left as is with a warning. Git-ignored files in the removed worktree (such as `.env`) are deleted with it. It needs `gh`. Tests: `bash tests/pr-done.test.sh`.
 
 ## Install
 
