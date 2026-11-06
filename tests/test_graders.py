@@ -119,6 +119,93 @@ class FullSuiteAfterFixTest(unittest.TestCase):
         self.assertFalse(self.passes(edit("money.py"), say("Done.\npython3 -m unittest test_receipt passes.")))
 
 
+GREEN = "...\n----------------------------------------------------------------------\nRan 3 tests in 0.000s\n\nOK"
+
+
+class SuiteGreenAfterEditTest(unittest.TestCase):
+    pattern = graders("tdd-skips-markup")["suite-green-after-edit"]
+
+    def passes(self, *events):
+        return re.search(self.pattern, trace(*events)) is not None
+
+    def test_edit_then_green_run(self):
+        self.assertTrue(self.passes(edit("index.html"), bash("python3 -m unittest"), output(GREEN)))
+
+    def test_sed_edit_then_green_run(self):
+        self.assertTrue(self.passes(bash("sed -i '' 's/a/b/' index.html"), bash("python3 -m unittest"), output(GREEN)))
+
+    def test_green_run_only_before_the_edit_fails(self):
+        self.assertFalse(self.passes(bash("python3 -m unittest"), output(GREEN), edit("index.html")))
+
+    def test_reading_the_page_is_not_an_edit(self):
+        self.assertFalse(self.passes(bash("cat index.html"), bash("python3 -m unittest"), output(GREEN), edit("index.html")))
+
+    def test_a_later_failing_run_fails(self):
+        self.assertFalse(self.passes(edit("index.html"), output(GREEN), bash("python3 -m unittest"), output(RED)))
+
+    def test_red_then_green_after_the_edit(self):
+        self.assertTrue(self.passes(edit("index.html"), output(RED), edit("index.html"), output(GREEN)))
+
+    def test_no_run_after_the_edit_fails(self):
+        self.assertFalse(self.passes(edit("index.html"), say("Done, Ran 3 tests in 0.000s OK")))
+
+    def test_an_edit_after_the_green_run_fails(self):
+        self.assertFalse(self.passes(edit("index.html"), output(GREEN), write("index.html")))
+
+    def test_a_bare_ok_from_tail_counts_as_green(self):
+        self.assertTrue(self.passes(edit("index.html"), bash("python3 -m unittest 2>&1 | tail -1"), output("OK")))
+
+    def test_a_bare_ok_from_a_non_test_command_is_not_green(self):
+        check = bash("grep -q 'target=\"_blank\"' index.html && echo OK")
+        self.assertFalse(self.passes(edit("index.html"), check, output("OK")))
+
+    def test_a_sed_on_another_line_does_not_reach_the_next_command(self):
+        later = bash("sed -i '' 's/x/y/' README.md\ngrep -c target index.html")
+        self.assertTrue(self.passes(edit("index.html"), bash("python3 -m unittest"), output(GREEN), later))
+
+    def test_page_written_by_a_redirect_then_green(self):
+        self.assertTrue(self.passes(bash("cat > index.html <<'EOF'\n<a>\nEOF"), output(GREEN)))
+
+    def test_page_written_by_python_then_green(self):
+        self.assertTrue(self.passes(bash("python3 -c \"open('index.html', 'w').write(s)\""), output(GREEN)))
+
+    def test_sed_script_with_double_quotes_then_green(self):
+        sed = "sed -i '' 's|href=\"\\([^\"]*\\)\">|href=\"\\1\" target=\"_blank\">|' index.html && python3 -m unittest"
+        self.assertTrue(self.passes(bash(sed), output(GREEN)))
+
+    def test_sed_on_another_file_before_reading_the_page_is_not_an_edit(self):
+        other = bash("sed -i '' 's/a/b/' README.md && cat index.html")
+        self.assertFalse(self.passes(other, output(GREEN), edit("index.html")))
+
+
+class NoTestViaBashTest(unittest.TestCase):
+    pattern = graders("tdd-skips-markup")["no-test-via-bash"]
+
+    def passes(self, *events):
+        return re.search(self.pattern, trace(*events)) is not None
+
+    def test_running_and_reading_the_tests_passes(self):
+        self.assertTrue(self.passes(bash("cat test_site.py"), bash("python3 -m unittest test_site.py"), edit("index.html")))
+
+    def test_editing_the_page_through_bash_passes(self):
+        self.assertTrue(self.passes(bash("sed -i '' 's/a/b/' index.html && python3 -m unittest")))
+
+    def test_appending_a_test_fails(self):
+        self.assertFalse(self.passes(bash("cat >> test_site.py <<'EOF'\n    def test_x(self): pass\nEOF")))
+
+    def test_sed_on_the_test_file_fails(self):
+        self.assertFalse(self.passes(bash("sed -i '' 's/a/b/' test_site.py")))
+
+    def test_a_page_sed_does_not_reach_the_test_run_on_the_next_line(self):
+        self.assertTrue(self.passes(bash("sed -i '' 's/a/b/' index.html\npython3 -m unittest test_site.py")))
+
+    def test_sed_script_with_double_quotes_on_the_test_file_fails(self):
+        self.assertFalse(self.passes(bash("sed -i '' 's|\"a\"|\"b\"|' test_site.py")))
+
+    def test_python_writing_a_new_test_file_fails(self):
+        self.assertFalse(self.passes(bash("python3 -c \"open('tests/test_links.py', 'w').write(t)\"")))
+
+
 class OrderGradersTest(unittest.TestCase):
     """red-in-trace and test-edited-before-fix, identical in both tdd cases."""
 
