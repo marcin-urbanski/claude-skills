@@ -1,6 +1,6 @@
 # Claude skills
 
-The skills, subagents and hooks I use every day with [Claude Code](https://code.claude.com). This repo is also where they live: the folders in `~/.claude/skills` on my Mac are symlinks to it, so every change is tracked in git.
+My skills, subagents and hooks for [Claude Code](https://code.claude.com), shared publicly as the `marcin-skills` plugin.
 
 They encode my way of working, and some are strict on purpose: `tdd` writes a failing test even when asked to skip it. Take what fits your workflow and [turn off the rest](#turning-parts-off).
 

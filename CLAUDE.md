@@ -1,16 +1,17 @@
 # claude-skills
 
-This repo is the source of truth for my Claude skills (`handoff`, `spec-first`, `design-check`, `tdd`, `systematic-debugging`, `verification-before-completion`, `ux-principles`, `pr`, `retro`, `playbook`), the subagents `spec-first` delegates to (`implementer`, `reviewer`) and the `handoff` hooks (`handoff-load.sh`, `handoff-nudge.sh`). Files in this repo (skills, README, commits) are written in English.
+This repo is the public home of my Claude skills (`handoff`, `spec-first`, `design-check`, `tdd`, `systematic-debugging`, `verification-before-completion`, `ux-principles`, `pr`, `retro`, `playbook`), the subagents `spec-first` delegates to (`implementer`, `reviewer`) and the `handoff` hooks (`handoff-load.sh`, `handoff-nudge.sh`). Files in this repo (skills, README, commits) are written in English.
 
 ## How the repo is wired to Claude
 
-- `~/.claude/skills/<skill>`, `~/.claude/agents/*.md` and `~/.claude/hooks/*.sh` are symlinks into `~/Developer/claude-skills`. Every Claude Code session on this Mac loads whatever is checked out there, uncommitted edits included.
-- `ux-principles` has no local symlink. It reaches Claude through claude.ai sync. `handoff` is both symlinked and uploaded to claude.ai.
+- Claude Code sessions on my Mac do not load their skills, agents or hooks from this repo. Since 2026-11-09 the links in `~/.claude/skills`, `~/.claude/agents` and `~/.claude/hooks` there point at `~/Developer/extra-skills`, a private team copy that started from this repo and now evolves separately. A change merged here does not change what those sessions run.
+- Anyone else gets this repo as the `marcin-skills` plugin or by linking single skills from a clone (see `README.md`).
+- `handoff` and `ux-principles` are also uploaded to claude.ai (see below).
 - `~/.claude/skills/synced/` has not updated since 21.09 and has no effect on the app. Ignore it.
 
 ## Branches and worktrees
 
-`~/Developer/claude-skills` always stays on `main`. Do all changes in a separate worktree, so sessions never load a work-in-progress branch:
+`~/Developer/claude-skills` always stays on `main`. Do all changes in a separate worktree:
 
 ```bash
 git worktree add ../claude-skills-<name> -b feature/<name> main
@@ -22,7 +23,7 @@ Commit, push and open the PR from the worktree. After I merge the PR:
 cd ~/Developer/claude-skills && scripts/pr-done.sh <PR number>
 ```
 
-It updates `main`, removes the worktree and deletes the branch. The change reaches sessions only after `main` is updated, because the symlinks point at `~/Developer/claude-skills`. GitHub deletes the remote branch on merge. If `pr-done` refuses (uncommitted changes, or commits on the branch that are not in the PR), stop and tell me instead of cleaning up by hand.
+It updates `main`, removes the worktree and deletes the branch. GitHub deletes the remote branch on merge. If `pr-done` refuses (uncommitted changes, or commits on the branch that are not in the PR), stop and tell me instead of cleaning up by hand.
 
 ## After changing `handoff` or `ux-principles`
 
@@ -48,8 +49,10 @@ For skills where firing or a measurable behaviour matters (`tdd`, `verification-
 
 Skills that rest on judgment (`spec-first`, `pr`, `retro`) and changes no eval case covers are tested with subagents:
 
-1. Baseline first: run a subagent on each scenario the change targets with the current version (the one on `main`) and record what it does.
-2. Make the change in the worktree. The installed skill is still `main`'s, so tell the test subagents to read the skill from the worktree path.
+The skills installed on this Mac come from `extra-skills`, not from this repo, and its copy of a skill may differ and may also load in a test subagent. So every test prompt names the file to read and says it is the authoritative version.
+
+1. Baseline first: run a subagent on each scenario the change targets with the current version, read from `~/Developer/claude-skills/skills/<skill>/SKILL.md` (on `main`), and record what it does.
+2. Make the change in the worktree, and tell the test subagents to read the skill from the worktree path.
 3. Run each scenario at least 2 times with the new version, or 5 times when the change is only rewording, and compare with the baseline.
 
 When a skill misbehaves in real use but not in tests, read the real transcripts in `~/.claude/projects/<project>/*.jsonl` (the folder name is the project path with `/` replaced by `-`) to see what the model actually did.
