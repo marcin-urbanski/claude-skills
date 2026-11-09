@@ -29,7 +29,7 @@ The goal is that a human never writes the same review comment twice.
 3. **Read the environment** before proposing anything, so you extend what exists instead of reinventing it:
    - the project's `CLAUDE.md` / `AGENTS.md` and `CODING_STANDARDS.md` (or `CONTRIBUTING.md`);
    - its check commands: `composer.json` / `package.json` scripts, `Makefile`, CI workflows, pre-commit config, `.claude/settings.json` hooks;
-   - the global `~/.claude/CLAUDE.md` and the skills and agents the session used (sources in `~/Developer/claude-skills`).
+   - the global `~/.claude/CLAUDE.md` and the skills and agents the session used (the installed copy the session loaded, `${CLAUDE_SKILL_DIR}/..` for skills).
 
    A check that exists but is not wired into CI or a hook is the finding. A repo with no guardrail at all (no pre-commit hook and no CI job running lint, static analysis and tests) is a finding of its own.
 4. **Find the moments**: errors, `[repeat]` calls, long searches for a file or fact, `[result Nk chars]` reads, places where the user corrected the agent or said the same thing twice, review comments, and anything the reviewer subagent missed that a human caught.
@@ -38,7 +38,7 @@ The goal is that a human never writes the same review comment twice.
    - **Moment**: time from the digest and a one-line quote or description;
    - **Cause**: what in the environment allowed it;
    - **Change**: the target file and the exact rule text, check or pointer to add, change or delete.
-7. **Stop and let the user pick.** Apply only what they choose. Changes to skills, agents or the reviewer checklist go through a worktree as `~/Developer/claude-skills/CLAUDE.md` describes; when they came from the `marcin-skills` plugin, propose them as an issue or pull request on github.com/marcin-urbanski/claude-skills instead, since an update replaces the plugin's folder. Changes to a project go on a branch per its rules.
+7. **Stop and let the user pick.** Apply only what they choose. Changes to skills, agents or the reviewer checklist go to the repo the skill was installed from: when it is linked from a local clone, on a branch in a worktree of that clone, as the repo's `CLAUDE.md` describes; when it came from the `marcin-skills` plugin, propose them as an issue or pull request on github.com/marcin-urbanski/claude-skills instead, since an update replaces the plugin's folder. Changes to a project go on a branch per its rules.
 
 ## Where a fix belongs
 
