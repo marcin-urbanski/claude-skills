@@ -16,6 +16,7 @@ input=$(cat)
 event=$(printf '%s' "$input" | jq -r '.hook_event_name // empty')
 session=$(printf '%s' "$input" | jq -r '.session_id // empty')
 cwd=$(printf '%s' "$input" | jq -r '.cwd // empty')
+active=$(printf '%s' "$input" | jq -r '.stop_hook_active // false')
 [ -n "$session" ] && [ -d "$cwd" ] || exit 0
 root=$(git -C "$cwd" rev-parse --show-toplevel 2>/dev/null) || exit 0
 cd "$root" || exit 0
@@ -71,7 +72,9 @@ output=$(bash -c '. "$1"' "$root/$checks_path" "$script" 2>&1)
 status=$?
 rm -f "$script"
 
-# This hook's own marker, not stop_hook_active, which another Stop hook's block also sets.
+# Let a stop through only right after this hook's own block: its marker says it blocked, and stop_hook_active
+# says this stop continues a block. Neither alone is enough: another Stop hook's block also sets
+# stop_hook_active, and the marker outlives a turn the user interrupted.
 blocked="$state.blocked"
 if [ "$status" -eq 0 ]; then
   rm -f "$blocked"
@@ -80,7 +83,7 @@ if [ "$status" -eq 0 ]; then
 fi
 
 tail=$(printf '%s\n' "$output" | tail -n 40)
-if [ -f "$blocked" ]; then
+if [ -f "$blocked" ] && [ "$active" = "true" ]; then
   rm -f "$blocked"
   jq -n --arg s "$source_note" --arg t "$tail" \
     '{systemMessage: ("verify-gate: the checks still fail (\($s)). Letting this stop through; they need fixing before a commit.\n" + $t)}'

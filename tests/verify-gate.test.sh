@@ -41,11 +41,10 @@ assert_runs() {
   [ "$n" -eq "$1" ] || fail "expected checks.sh to run $1 time(s), ran $n"
 }
 
-# Starts with the cd line the verify-setup skill prescribes, so the tests fail if the hook runs the script
-# from somewhere its own path does not lead back to the repo root.
+# Starts with the cd line the verify-setup skill prescribes.
 CHECKS='#!/usr/bin/env bash
 set -euo pipefail
-cd "$(dirname "$0")/../../.."
+cd "$(git rev-parse --show-toplevel)"
 echo run >>"$GATE_TEST_LOG"
 if grep -q red state; then echo "FAILED: state is red"; exit 1; fi
 echo "all green"'
@@ -157,6 +156,41 @@ test_another_hooks_block_does_not_use_up_the_gate() {
   assert_blocks
 }
 
+test_checks_that_cd_from_their_own_path_work() {
+  new_repo
+  sed 's#cd "$(git rev-parse --show-toplevel)"#cd "$(dirname "$0")/../../.."#' "$repo/.claude/skills/verify/checks.sh" >"$repo/c.tmp"
+  mv "$repo/c.tmp" "$repo/.claude/skills/verify/checks.sh"
+  git -C "$repo" commit -q -am "cd from the script's own path"
+  run_hook SessionStart
+  echo red >"$repo/state"
+  run_hook Stop
+  assert_blocks
+  assert_contains "FAILED: state is red"
+}
+
+test_block_left_from_an_interrupted_turn_does_not_let_the_next_failure_through() {
+  new_repo
+  run_hook SessionStart
+  echo red >"$repo/state"
+  run_hook Stop
+  # the user pressed Esc, so no stop followed the block; a new turn starts
+  echo "red again" >"$repo/state"
+  run_hook Stop false
+  assert_blocks
+}
+
+test_block_left_after_a_revert_does_not_let_the_next_failure_through() {
+  new_repo
+  run_hook SessionStart
+  echo red >"$repo/state"
+  run_hook Stop
+  echo green >"$repo/state"
+  run_hook Stop true
+  echo red >"$repo/state"
+  run_hook Stop false
+  assert_blocks
+}
+
 test_failure_after_a_let_through_blocks_again() {
   new_repo
   run_hook SessionStart
@@ -186,6 +220,7 @@ test_no_temp_copy_is_left_behind() {
   echo change >"$repo/new-file.txt"
   run_hook Stop
   ! ls "$TMP"/claude-verify-gate-"$session".checks.sh >/dev/null 2>&1 || fail "temp copy of checks.sh left in TMPDIR"
+  [ ! -f "$TMP/claude-verify-gate-$session" ] || fail "fingerprint recorded in a repo without checks.sh"
 }
 
 test_fix_after_a_block_is_quiet() {
