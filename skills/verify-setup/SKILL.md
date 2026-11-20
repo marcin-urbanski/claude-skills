@@ -23,10 +23,11 @@ An existing verify skill is improved, never replaced by a second one.
 
 ## 2. Write checks.sh
 
-- Fast and deterministic: unit tests, linter, type checks. Aim for under a minute, because it runs at the end of every turn that changed code. A full build, end-to-end runs and anything slower stay in the verify skill and CI.
-- `#!/usr/bin/env bash`, `set -euo pipefail`, then `cd "$(dirname "$0")/../../.."` so it runs from the repo root. Exit non-zero on any failure and print the failing lines: Claude sees the last 40 lines of output.
-- No prompts, no network beyond package registries, no reading secrets, no writes outside the repo's build folders.
-- The hook runs the copy committed on the base branch, so a branch cannot weaken the check that judges it. An edit to `checks.sh` takes effect for the gate once it is merged; on a branch that adds the file, the working copy runs.
+- Everything fast and deterministic goes in: unit tests, linter, type checks, and the end-to-end checks that run headless in seconds (start the server on fixture data and call it, run the CLI and compare its output). A gate with only unit tests passes the very breaks this skill exists to catch. Aim for under a minute, because it runs at the end of every turn that changed code. Only what cannot run headless or fast (driving a UI, a full app build) stays in the verify skill and CI.
+- `#!/usr/bin/env bash`, `set -euo pipefail`, then `cd "$(dirname "$0")/../../.."` so it runs from the repo root. Exit non-zero on any failure. Claude sees only the last 40 lines of output, so keep it terse (a compact test reporter, one line per failed check) and run every part even after one fails.
+- No prompts, no network beyond package registries and local addresses (127.0.0.1), no reading secrets, no writes outside the repo's build folders and `$TMPDIR`. Temp folders come from `mktemp -d "$TMPDIR/<name>.XXXXXX"`: macOS `mktemp` ignores `$TMPDIR` without a template.
+- Fail when nothing ran. A test runner started in the wrong folder can find zero tests and still exit 0; check the count, or point the runner at the test folder explicitly.
+- The hook runs the copy committed on the base branch, so a branch cannot drop or weaken a command in it. An edit to `checks.sh` takes effect for the gate once it is merged; on a branch that adds the file, the working copy runs. The test files it calls still come from the branch, so a weakened test is the reviewer's to catch.
 
 ## 3. Write the verify skill
 
