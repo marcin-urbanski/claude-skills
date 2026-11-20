@@ -140,6 +140,54 @@ test_second_failure_in_a_row_is_let_through_with_a_warning() {
   assert_contains "still fail"
 }
 
+test_session_start_mid_session_keeps_the_first_record() {
+  new_repo
+  run_hook SessionStart
+  echo red >"$repo/state"
+  run_hook SessionStart
+  run_hook Stop
+  assert_blocks
+}
+
+test_another_hooks_block_does_not_use_up_the_gate() {
+  new_repo
+  run_hook SessionStart
+  echo red >"$repo/state"
+  run_hook Stop true
+  assert_blocks
+}
+
+test_failure_after_a_let_through_blocks_again() {
+  new_repo
+  run_hook SessionStart
+  echo red >"$repo/state"
+  run_hook Stop
+  run_hook Stop true
+  run_hook Stop
+  assert_blocks
+}
+
+test_files_written_by_passing_checks_do_not_rerun_them() {
+  new_repo
+  printf '%s\necho out >coverage.out\n' "$CHECKS" >"$repo/.claude/skills/verify/checks.sh"
+  git -C "$repo" commit -q -am "checks write a file"
+  run_hook SessionStart
+  echo change >"$repo/new-file.txt"
+  run_hook Stop
+  run_hook Stop
+  assert_runs 1
+}
+
+test_no_temp_copy_is_left_behind() {
+  new_repo
+  git -C "$repo" rm -q -r .claude
+  git -C "$repo" commit -q -m "no checks"
+  run_hook SessionStart
+  echo change >"$repo/new-file.txt"
+  run_hook Stop
+  ! ls "$TMP"/claude-verify-gate-"$session".checks.sh >/dev/null 2>&1 || fail "temp copy of checks.sh left in TMPDIR"
+}
+
 test_fix_after_a_block_is_quiet() {
   new_repo
   run_hook SessionStart

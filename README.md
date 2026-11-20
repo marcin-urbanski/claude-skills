@@ -54,7 +54,7 @@ They need `jq`. The plugin registers them for you; for a manual install, registe
 
 To test them, run `bash tests/handoff-load.test.sh` and `bash tests/handoff-nudge.test.sh`. They build temporary repos with worktrees and need only bash, git and `jq`.
 
-[`verify-gate.sh`](hooks/verify-gate.sh) (SessionStart and Stop) belongs to `verify-setup`. When Claude finishes a turn that changed the repo, it runs the project's `.claude/skills/verify/checks.sh` and sends Claude back with the failing output; a project without that file is left alone. It records the working tree at session start and after each green run, so a turn that changed nothing runs nothing. It runs `checks.sh` as committed on the base branch, so a branch cannot weaken the check that judges it. A failure blocks the stop once; if the checks still fail on the next stop, that stop goes through with a warning, so Claude never gets stuck. For a manual install, register it for both events, with a timeout that fits the project's checks:
+[`verify-gate.sh`](hooks/verify-gate.sh) (SessionStart and Stop) belongs to `verify-setup`. When Claude finishes a turn that changed the repo, it runs the project's `.claude/skills/verify/checks.sh` and sends Claude back with the failing output; a project without that file is left alone. It records the working tree at session start and after each green run, so a turn that changed nothing runs nothing; until the checks pass, every turn runs them again. It runs `checks.sh` as committed on the base branch, so a branch cannot weaken the check that judges it. A failure blocks the stop once; if the checks still fail on the next stop, that stop goes through with a warning, so Claude never gets stuck. For a manual install, register it for both events, with a timeout that fits the project's checks:
 
 ```json
 {
@@ -108,7 +108,7 @@ claude plugin marketplace add marcin-urbanski/claude-skills
 claude plugin install marcin-skills@marcin-skills
 ```
 
-Restart Claude Code afterwards. Plugin skills are namespaced, for example `/marcin-skills:tdd`. To get new commits, run `claude plugin update marcin-skills@marcin-skills`, or turn on auto-update for the marketplace under `/plugin` → Marketplaces. The hooks use `jq`: without it the nudge never fires and the load hook cannot tell a compaction from a fresh start.
+Restart Claude Code afterwards. Plugin skills are namespaced, for example `/marcin-skills:tdd`. To get new commits, run `claude plugin update marcin-skills@marcin-skills`, or turn on auto-update for the marketplace under `/plugin` → Marketplaces. The hooks use `jq`: without it the nudge never fires, the load hook cannot tell a compaction from a fresh start, and `verify-gate` is off.
 
 ### Turning parts off
 
