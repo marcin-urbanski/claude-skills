@@ -95,7 +95,7 @@ A skill call is easy to miss in the chat. This inline hook (no script needed) pr
 
 ### As a plugin
 
-Install every skill, both subagents and the `handoff` hooks in one step, from a Claude Code session (2.1.275 or later):
+Install every skill, both subagents and the hooks (`handoff` and `verify-gate`) in one step, from a Claude Code session (2.1.275 or later):
 
 ```
 /plugin install marcin-skills --marketplace marcin-urbanski/claude-skills
