@@ -41,7 +41,11 @@ assert_runs() {
   [ "$n" -eq "$1" ] || fail "expected checks.sh to run $1 time(s), ran $n"
 }
 
+# Starts with the cd line the verify-setup skill prescribes, so the tests fail if the hook runs the script
+# from somewhere its own path does not lead back to the repo root.
 CHECKS='#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/../../.."
 echo run >>"$GATE_TEST_LOG"
 if grep -q red state; then echo "FAILED: state is red"; exit 1; fi
 echo "all green"'

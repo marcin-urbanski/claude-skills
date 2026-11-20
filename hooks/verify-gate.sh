@@ -62,7 +62,9 @@ else
   exit 0
 fi
 
-output=$(bash "$script" 2>&1)
+# Run the copy with $0 set to the file's place in the repo, so a script that finds the root from its own path
+# (cd "$(dirname "$0")/../../..") works the same as when it is run by hand.
+output=$(bash -c '. "$1"' "$root/$checks_path" "$script" 2>&1)
 status=$?
 rm -f "$script"
 
