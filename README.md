@@ -14,6 +14,7 @@ They encode my way of working, and some are strict on purpose: `tdd` writes a fa
 | [tdd](skills/tdd/SKILL.md) | Red, green, refactor for every change to production code. |
 | [systematic-debugging](skills/systematic-debugging/SKILL.md) | Find the root cause before fixing anything. |
 | [verification-before-completion](skills/verification-before-completion/SKILL.md) | Run the tests, linters and build before saying something works. |
+| [verify-setup](skills/verify-setup/SKILL.md) | Gives a project its own `verify` skill in `.claude/skills/verify`, committed with the project: how to start the app with safe data, drive the flow that changed and read the result, a feature map of the main flows with their expected results, and `checks.sh`, the fast checks the `verify-gate` hook runs. It stress-tests the harness before calling it done: three identical runs, then a deliberate break it has to catch. |
 | [ux-principles](skills/ux-principles/SKILL.md) | My UI/UX rulebook: avoiding generic AI-looking design, conversion psychology within honest limits, visual craft, interaction and app patterns, e-commerce product pages and checkout, and native iPhone, iPad and Mac apps. |
 | [pr](skills/pr/SKILL.md) | The format for a pull request body that a human can review fast: a small visual of the change (pseudocode, call tree, Mermaid, a diff of the shape), before-and-after evidence, and a merge danger call (one-way or two-way door, blast radius). `spec-first` uses it when it opens a PR. |
 | [retro](skills/retro/SKILL.md) | `/retro` after a hard session or a PR review: reads a digest of the session transcript (`digest.py`) and the PR's review comments, then proposes, most severe first, the automated check, coding standard, reviewer rule, skill fix or `CLAUDE.md` pointer that stops the same mistake from happening again. It keeps `CODING_STANDARDS.md` within its template's limit by sharpening, merging or replacing rules. Only you can invoke it, and it changes nothing until you pick. |
@@ -53,6 +54,23 @@ They need `jq`. The plugin registers them for you; for a manual install, registe
 
 To test them, run `bash tests/handoff-load.test.sh` and `bash tests/handoff-nudge.test.sh`. They build temporary repos with worktrees and need only bash, git and `jq`.
 
+[`verify-gate.sh`](hooks/verify-gate.sh) (SessionStart and Stop) belongs to `verify-setup`. When Claude finishes a turn that changed the repo, it runs the project's `.claude/skills/verify/checks.sh` and sends Claude back with the failing output; a project without that file is left alone. It records the working tree at session start and after each green run, so a turn that changed nothing runs nothing; until the checks pass, every turn runs them again. It runs `checks.sh` as committed on the base branch, so a branch cannot weaken the check that judges it. A failure blocks the stop once; if the checks still fail on the next stop, that stop goes through with a warning, so Claude never gets stuck. For a manual install, register it for both events, with a timeout that fits the project's checks:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "~/.claude/hooks/verify-gate.sh" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "~/.claude/hooks/verify-gate.sh", "timeout": 600 }] }
+    ]
+  }
+}
+```
+
+Tests: `bash tests/verify-gate.test.sh`.
+
 ### Seeing which skills Claude invoked
 
 A skill call is easy to miss in the chat. This inline hook (no script needed) prints a line like `🔧 skill: tdd` each time Claude invokes a skill, marked `(subagent)` when a subagent did:
@@ -77,7 +95,7 @@ A skill call is easy to miss in the chat. This inline hook (no script needed) pr
 
 ### As a plugin
 
-Install every skill, both subagents and the `handoff` hooks in one step, from a Claude Code session (2.1.275 or later):
+Install every skill, both subagents and the hooks (`handoff` and `verify-gate`) in one step, from a Claude Code session (2.1.275 or later):
 
 ```
 /plugin install marcin-skills --marketplace marcin-urbanski/claude-skills
@@ -90,7 +108,7 @@ claude plugin marketplace add marcin-urbanski/claude-skills
 claude plugin install marcin-skills@marcin-skills
 ```
 
-Restart Claude Code afterwards. Plugin skills are namespaced, for example `/marcin-skills:tdd`. To get new commits, run `claude plugin update marcin-skills@marcin-skills`, or turn on auto-update for the marketplace under `/plugin` → Marketplaces. The hooks use `jq`: without it the nudge never fires and the load hook cannot tell a compaction from a fresh start.
+Restart Claude Code afterwards. Plugin skills are namespaced, for example `/marcin-skills:tdd`. To get new commits, run `claude plugin update marcin-skills@marcin-skills`, or turn on auto-update for the marketplace under `/plugin` → Marketplaces. The hooks use `jq`: without it the nudge never fires, the load hook cannot tell a compaction from a fresh start, and `verify-gate` is off.
 
 ### Turning parts off
 
